@@ -2,7 +2,7 @@
   "name": "lemmaria",
   "displayName": "Lemmaria",
   "description": "AI writing agent for academics — agentic editing, reviewing and citation checking for LaTeX and Markdown papers",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "lemmaria",
   "license": "SEE LICENSE IN LICENSE.txt",
   "icon": "media/lemmaria/icon.png",

@@ -30,10 +30,18 @@ named, bounded tool, and folder access outside your workspace is granted per ses
 resume, fork, and rewind; conversation compaction when a session grows long; `@` references to pull
 files and selections into context; and a command menu in the composer.
 
-**Review your draft before a reviewer does.** `Lemmaria: Review Selection` runs a **blind panel** of
-independent reviewers over your manuscript and returns a ledger of concerns, each one anchored to a
-byte-exact quote in your text — so every point it raises, you can jump straight to. Reviewers cannot
-see each other's findings, which is what keeps a panel from converging on one opinion.
+**Review your draft before a reviewer does.** **Run blind panel** in the Review tab (or `/review` in
+the composer) sends a **blind panel** of independent reviewers over your manuscript and returns a
+ledger of concerns, each one anchored to a byte-exact quote in your text — so every point it raises,
+you can jump straight to. Reviewers cannot see each other's findings, which is what keeps a panel
+from converging on one opinion. `Lemmaria: Review Selection` reviews just the passage you select.
+
+**See what a reviewer will see.** With a model that accepts images, a **PDF reviewer** reads the
+compiled pages — layout, figures, page limits — beside the text reviewers, or on its own with
+**Review the PDF** (`/review-pdf`). A **verifier** re-reads every concern against your manuscript and
+withdraws the ones your text already answers, showing the passage that does. A **scorecard** then
+sums up the panel per dimension, computed from the concerns it located — never a prediction of
+acceptance.
 
 **Check what you cite.** `Lemmaria: Check Citations` verifies your keys against your `.bib` and
 flags what it cannot ground. Literature search reaches Crossref and arXiv through a paced, polite
@@ -81,12 +89,13 @@ separately from the interface.
 - VS Code 1.106 or later.
 - An API key for an Anthropic-protocol or OpenAI-compatible model.
 - For compile checks: a local TeX distribution, or `tectonic`.
+- For PDF review: a model that accepts images, and a compiled PDF of the paper — or a TeX
+  installation to build one.
 
 ## Status
 
-Lemmaria is under active development and this is its first published release. It has no persisted
-format it owes backward compatibility to; when a design proves wrong it is replaced rather than
-shimmed. Questions and bug reports go to the project's
+Lemmaria is under active development, and its features may still change between versions.
+Questions and bug reports go to the project's
 [GitHub Issues](https://github.com/Jokestv2/Lemmaria/issues).
 
 ## Licence

@@ -5,7 +5,50 @@ All notable changes to Lemmaria are recorded here. This file follows
 [semantic versioning](https://semver.org/spec/v2.0.0.html) and is pre-1.0, so minor versions may
 change behaviour.
 
-## [Unreleased]
+## [0.3.1] — 2026-10-22
+
+### Reviewing
+
+- **Review the compiled PDF.** A PDF reviewer looks at the rendered pages of your paper — layout,
+  figures, page limits — beside the text reviewers, or on its own: **Review the PDF** in the Review
+  tab, or `/review-pdf` in the composer. Its concerns point at the source where the fix belongs, and
+  can cite the page it saw.
+- **Facts about the PDF, before any model runs** — page count and size, where the references begin
+  and the main-text pages that leaves against the venue's limit, an author left in a double-blind
+  PDF's metadata, overfull boxes, and the smallest text size.
+- **Verification.** Before the cross-review, one more model re-reads each concern against the
+  manuscript and withdraws one the text already answers, quoting the passage that does. Withdrawn
+  concerns stay visible under *Withdrawn by verification*. Pick its model, or turn it Off, under
+  **Verification** in the Models tab.
+- **A scorecard** at the top of the Review tab: a readiness word, then one row per dimension — a
+  level from Blocking to Strong, its issues and strengths, each reviewer's view — computed from the
+  concerns the panel located. Click a row to see its concerns. Reviewers' 1–10 impressions are shown
+  faintly and marked uncalibrated; nothing predicts acceptance. Changes since your last comparable
+  review are shown.
+- **Prior work, located.** An originality concern must cite a paper the reviewer's own search
+  returned, shown with its title and link; reviewers' searches leave out your own paper. New
+  dimensions: originality, significance and presentation.
+- **A panel that reports itself honestly** — how many reviewers and distinct models ran, which seat
+  failed and why, consensus between same-model reviewers marked, and "raised no concern" only when
+  nothing was raised.
+
+### Models
+
+- **gpt-6-luna** and **Claude Haiku 5.5** are priced and supported.
+- Lemmaria knows which models accept images; override it per model with **Image input** in the
+  Models tab.
+
+### Settings
+
+- `lemmaria.paperPdf` — a compiled PDF of your paper, relative to the workspace root. Leave it empty
+  to use the PDF beside the entry file, or to compile one when a review needs it.
+
+### Fixed
+
+- On a multi-file paper, concerns quoted from a file other than the entry are anchored, not dropped.
+- One malformed concern no longer discards a reviewer's whole ledger.
+- Papers with PDF figures compile in Compile Check.
+- A project inside a folder named `out`, `dist`, `node_modules`, `.git` or `.vscode-test` compiles.
 
 ### Changed
 
