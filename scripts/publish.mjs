@@ -105,13 +105,17 @@ function fail(msg) {
  *      decides to echo cannot reach the terminal or a CI log.
  *    - default    — inherited, so a long build streams live. Safe because these
  *      commands are never given the token in the first place. */
-function run(cmd, args, { env = {}, capture = false, redacted = false } = {}) {
+function run(
+  cmd,
+  args,
+  { env = {}, capture = false, redacted = false, cwd = ROOT } = {},
+) {
   const line = WIN
     ? [cmd, ...args.map((a) => (/[\s"]/.test(a) ? `"${a}"` : a))].join(" ")
     : cmd;
   const piped = capture || redacted;
   const result = spawnSync(WIN ? line : cmd, WIN ? [] : args, {
-    cwd: ROOT,
+    cwd,
     shell: WIN,
     encoding: "utf8",
     stdio: piped ? "pipe" : "inherit",
@@ -129,6 +133,13 @@ function run(cmd, args, { env = {}, capture = false, redacted = false } = {}) {
 }
 
 const pnpm = (args, opts) => run("pnpm", args, opts);
+
+/** `vsce` is a devDependency of the extension package, not of the workspace
+ *  root, so `pnpm exec` resolves it only from `packages/extension`. Run from
+ *  the root it fails with `Command "vsce" not found` — which step 4's
+ *  not-found test once read as "not published yet". */
+const vsce = (args, opts) =>
+  run("pnpm", ["exec", "vsce", ...args], { ...opts, cwd: EXT_DIR });
 
 /* --------------------------------------------------------------- 1. manifest */
 
@@ -197,10 +208,13 @@ ok(`"## [${version}]" found`);
 
 step(4, "Marketplace");
 
-const show = pnpm(["exec", "vsce", "show", EXT_ID, "--json"], {
-  capture: true,
-});
+const show = vsce(["show", EXT_ID, "--json"], { capture: true });
 const showText = `${show.stdout}${show.stderr}`;
+
+// pnpm's own failure says "not found" too, so it is ruled out before the
+// Marketplace's answer is read: a check that never ran must not pass.
+if (/ERR_PNPM|Command "vsce" not found/.test(showText))
+  fail("could not run `vsce show` — is the extension package installed?");
 
 if (/not found/i.test(showText)) {
   ok(`${EXT_ID} is not published yet — this would be the FIRST publish`);
@@ -328,8 +342,6 @@ secret = readToken();
 ok("PAT loaded from .env (passed to vsce via the environment, never argv)");
 
 const publishArgs = [
-  "exec",
-  "vsce",
   "publish",
   "--no-dependencies",
   // `repository` is deliberately absent — forced while the GitHub repo was
@@ -341,7 +353,7 @@ const publishArgs = [
 ];
 
 console.log(`\n  --- vsce publish ${EXT_ID}@${version} ---`);
-const published = pnpm(publishArgs, {
+const published = vsce(publishArgs, {
   env: { VSCE_PAT: secret },
   redacted: true,
 });
