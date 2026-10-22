@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=lemmaria.lemmaria"><img src="https://img.shields.io/badge/VS%20Code%20Marketplace-install-007ACC.svg" alt="Install from the VS Code Marketplace"></a>
+  <a href="https://github.com/Jokestv2/Lemmaria/actions/workflows/ci.yml"><img src="https://github.com/Jokestv2/Lemmaria/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
   <img src="https://img.shields.io/badge/VS%20Code-%5E1.106-blue.svg" alt="VS Code ^1.106">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licence-PolyForm%20Strict%201.0.0-lightgrey.svg" alt="Licence: PolyForm Strict 1.0.0"></a>
 </p>
