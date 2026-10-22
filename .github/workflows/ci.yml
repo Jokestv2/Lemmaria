@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # 22, not 20: the webview's jsdom project (ADR 0037) pulls
+          # jsdom@30 -> undici@8, whose engines are `>=22.19.0` and
+          # `^22.22.2 || ^24.15.0 || >=26` respectively. undici reads
+          # `markAsUncloneable` off `node:worker_threads` with no fallback,
+          # and that export is Node 22+ — so on 20.x every one of the 21
+          # `test-webview/` files died in environment setup and the suite
+          # never ran at all (the run still reported the other 139 files as
+          # if nothing were missing). Keep this at or above the floor those
+          # two packages declare.
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm check:boundaries
+      - run: xvfb-run -a pnpm test:ext

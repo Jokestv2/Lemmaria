@@ -1,0 +1,40 @@
+[
+  {
+    "title": "Introduction",
+    "file": "main.tex",
+    "startLine": 7,
+    "endLine": 9,
+    "wordCount": 8,
+    "labels": [
+      "sec:intro"
+    ],
+    "citations": [
+      "knuth1984"
+    ],
+    "children": []
+  },
+  {
+    "title": "Method",
+    "file": "main.tex",
+    "startLine": 11,
+    "endLine": 22,
+    "wordCount": 14,
+    "labels": [
+      "sec:method",
+      "eq:loss"
+    ],
+    "citations": [],
+    "children": [
+      {
+        "title": "Training",
+        "file": "main.tex",
+        "startLine": 18,
+        "endLine": 22,
+        "wordCount": 5,
+        "labels": [],
+        "citations": [],
+        "children": []
+      }
+    ]
+  }
+]

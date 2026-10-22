@@ -1,0 +1,150 @@
+\documentclass[11pt,twocolumn]{article}
+\usepackage[letterpaper,margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\title{Corridor Attention: Bounded-Bandwidth Routing for Long-Context Sequence Models}
+\author{Anonymous Author(s)\\Submission under double-blind review}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Transformer language models spend a quadratic share of their compute on
+attention. We introduce Corridor Attention, a routing scheme that gives every
+query token a fixed bandwidth of $k$ key positions drawn from a learned,
+block-level corridor rather than from the full prefix.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+Self-attention computes an interaction between every pair of positions in a
+sequence, so its cost grows as $\Theta(n^2)$ in the sequence length $n$. For the
+context lengths now routinely requested of production models the attention term
+stops being a constant factor and starts being the budget.
+
+\noindent This sentence sits inside the text block and does not run outside it.
+
+The literature has answered this in two broadly different ways. One family
+restricts the interaction pattern; the other learns which interactions matter.
+Corridor Attention belongs to the second family, and Figure~\ref{fig:cost}
+compares the two on cost.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=6cm,height=4cm,xlabel={$n$},ylabel={FLOPs},
+  legend pos=north west,grid=both]
+\addplot[domain=1:1000,samples=200,thick,blue]{x^2/1000};\addlegendentry{dense}
+\addplot[domain=1:1000,samples=200,thick,red]{x/2};\addlegendentry{corridor}
+\end{axis}
+\end{tikzpicture}
+\caption{Attention cost as a function of sequence length. Both methods show cost
+\emph{increasing} as the sequence grows, with the dense baseline rising fastest.}
+\label{fig:cost}
+\end{figure}
+
+\section{Method}
+\label{sec:method}
+Let the visible set of query position $i$ be $S_i = W_i \cup G \cup R_i$, with
+$|S_i| \le w + g + r = k$. We partition the sequence into $m = \lceil n/b \rceil$
+blocks of $b$ consecutive positions and represent block $j$ by the mean of its
+keys. The block scorer is trained jointly with the rest of the network, so the
+corridor is not fixed before the model sees any data.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=6cm,height=4cm,
+  xlabel={block size $b$},
+  ylabel={val.\ perplexity},
+  legend pos=north east,grid=both]
+\addplot+[mark=*] coordinates {(1,18.2)(2,17.4)(4,16.9)(8,16.5)(16,16.8)(32,17.9)(64,19.5)};
+\addlegendentry{$k=64$}
+\addplot+[mark=square*] coordinates {(1,19.1)(2,18.0)(4,17.2)(8,16.7)(16,17.0)(32,18.3)(64,20.2)};
+\addlegendentry{$k=32$}
+\end{axis}
+\end{tikzpicture}
+\caption{Block-size sweep. The optimum sits at $b=8$ for both bandwidths.}
+\label{fig:sweep}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Per-dataset results.}
+\label{tab:results}
+\begin{tabular}{lrrr}
+\toprule
+Dataset & Len & PPL & FLOPs \\
+\midrule
+WikiText-103 & 4096 & 16.53 & 1.00 \\
+PG-19        & 8192 & 21.04 & 0.48 \\
+arXiv        & 16384 & 12.88 & 0.26 \\
+GitHub       & 32768 & 9.42 & 0.14 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Experiments}
+\label{sec:exp}
+We train on four long-context corpora and report validation perplexity averaged
+over three independent runs. Table~\ref{tab:results} gives the per-dataset
+numbers and Figure~\ref{fig:sweep} the block-size sweep.
+
+\subsection{Ablations}
+Removing the global tokens costs 0.4 perplexity; removing the learned corridor
+and replacing it with a fixed stride costs 1.9. The corridor is therefore doing
+most of the work, and the local window alone is not sufficient.
+
+We also varied the number of retrieved blocks $r$ while holding $w$ and $g$
+fixed. Performance is flat between $r=4$ and $r=12$ and degrades outside that
+range, which is the behaviour the bandwidth argument predicts.
+
+\subsection{Retrieval probes}
+On synthetic retrieval probes the corridor recovers the planted key at 94\%
+accuracy at $n=16384$, against 62\% for the strided baseline. The gap widens
+with sequence length, which is consistent with the corridor being learned rather
+than fixed.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=6cm,height=4cm,xlabel={training step ($\times 10^3$)},
+  ylabel={corridor entropy},grid=both]
+\addplot[domain=1:100,samples=120,thick,violet]{3.2*exp(-x/40)+0.8};
+\end{axis}
+\end{tikzpicture}
+\caption{Corridor entropy over training.}
+\label{fig:entropy}
+\end{figure}
+
+Figure~\ref{fig:entropy} shows that the corridor's entropy falls steadily over
+training, which is what we would expect if the scorer is learning to concentrate
+bandwidth rather than to spread it.
+
+\section{Related work}
+Sparse attention patterns, low-rank approximations and recurrent compression are
+the three standard answers. Our contribution is orthogonal to the third.
+
+\section{Discussion}
+The scheme's cost is linear in sequence length with a constant the practitioner
+sets directly, which is the property that makes it easy to budget for. The main
+limitation is that the block scorer adds parameters that must themselves be
+trained, and on short sequences that overhead is not repaid.
+
+\subsection{Threats to validity}
+Our evaluation uses a single model family and a single tokenizer. We have not
+tested whether the corridor transfers across tokenizations, and the retrieval
+probes are synthetic.
+
+
+\section{Conclusion}
+Corridor Attention gives every query a fixed, learned bandwidth. It is linear in
+sequence length, its constant is set by the practitioner, and it recovers most of
+the quality of dense attention on four long-context corpora.
+
+\end{document}

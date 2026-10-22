@@ -1,0 +1,27 @@
+{
+  "fixture": "novelty-probe",
+  "file": "main.tex",
+  "known": {
+    "title": "Adam: A Method for Stochastic Optimization",
+    "arxiv": "1412.6980",
+    "doi": "10.48550/arXiv.1412.6980"
+  },
+  "claims": [
+    {
+      "anchor": "previous optimiser combines a bias-corrected first moment with a",
+      "line": 21
+    },
+    {
+      "anchor": "Our contributions are as follows. We introduce the combination of",
+      "line": 47
+    },
+    {
+      "anchor": "Correcting both moments rather than one is the step that distinguishes our",
+      "line": 103
+    },
+    {
+      "anchor": "is, to our knowledge, novel, and it removes the need for a step-size schedule",
+      "line": 159
+    }
+  ]
+}

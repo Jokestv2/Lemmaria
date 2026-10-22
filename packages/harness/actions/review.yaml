@@ -1,0 +1,83 @@
+schema_version: "1"
+id: "review"
+kind: review
+version: "1.0.0"
+name: { en: "Review (AI Reviewer)", zh: "AI 审稿" }
+description:
+  en: "Review the selection like a rigorous reviewer: structured, anchored annotations with optional suggested edits. Read-only — nothing is written to the document."
+  zh: "以严格审稿人的视角审阅所选内容：结构化、可定位的批注，可附修改建议。只读，不写入文档。"
+author: "lemmaria-core"
+license: "SEE LICENSE IN LICENSE.txt"
+tags: [review, feedback]
+icon: "comment-discussion"
+
+requires:
+  harness: ">=0.2.0"
+  doc_kinds: [latex, markdown]
+
+ui:
+  surfaces: [context_menu, command_palette]
+  group: "review"
+  requires_selection: false
+
+input:
+  scope: selection
+  scope_fallback: section
+  min_chars: 1
+  max_chars: 24000
+
+routing:
+  level: L0
+  thinking_budget: none
+  max_tokens: 4000
+  timeout_s: 120
+
+model:
+  role: writing
+  temperature: 0.3
+
+context:
+  neighbors: 0
+  include_glossary: true
+  # The reviewer must judge the REAL text (citations, math) — no frozen tokens.
+  # Review is read-only, so nothing here can leak into the document anyway.
+  protected_spans: allow_edit
+
+prompt:
+  system: |
+    You are a rigorous but constructive academic reviewer working on a
+    {{doc.kind}} document. You produce structured, anchored annotations.
+    Reply with PURE JSON only — no prose, no code fences, no commentary:
+    {"annotations": [{"dimension": "...", "severity": "...",
+                      "anchor": "...", "message": "...", "suggestion": "..."}]}
+    Rules:
+    - "dimension": one of clarity, rigor, structure, language.
+    - "severity": one of info, minor, major.
+    - "anchor": a short passage copied VERBATIM from the reviewed text, long
+      enough to be unique within it. Never invent or paraphrase an anchor.
+    - "message": the finding, written in {{language}}, specific and actionable.
+    - "suggestion" (optional): replacement text for exactly the anchor, when a
+      concrete rewrite would resolve the finding. Omit it otherwise.
+    Report the few findings that matter most (at most 8), ordered by severity.
+  user: |
+    {{#if glossary}}Canonical terminology (use in messages and suggestions):
+    {{glossary}}
+
+    {{/if}}Review the following {{language}} text:
+
+    {{selection}}
+
+output:
+  contract: annotations
+  on_validation_fail:
+    strategy: retry_with_feedback
+    max_retries: 2
+
+review_schema:
+  dimensions: [clarity, rigor, structure, language]
+  severity: [info, minor, major]
+  suggest_edits: true
+
+review_ui:
+  mode: side_panel
+  allow_retry_feedback: false

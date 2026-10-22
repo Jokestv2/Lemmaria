@@ -1,0 +1,24 @@
+[
+  {
+    "title": "引言",
+    "file": "main.tex",
+    "startLine": 6,
+    "endLine": 7,
+    "wordCount": 14,
+    "labels": [
+      "sec:intro"
+    ],
+    "citations": [],
+    "children": []
+  },
+  {
+    "title": "方法",
+    "file": "main.tex",
+    "startLine": 9,
+    "endLine": 10,
+    "wordCount": 4,
+    "labels": [],
+    "citations": [],
+    "children": []
+  }
+]

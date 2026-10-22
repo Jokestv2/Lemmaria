@@ -1,0 +1,140 @@
+schema_version: "1"
+id: "expand"
+kind: edit
+version: "1.0.0"
+name: { en: "Expand By", zh: "扩写字数" }
+description:
+  en: "Develop the selection at greater length — elaboration only, never new claims or new citations."
+  zh: "把选区展开写得更充分——只作阐释，不引入新论点或新引用。"
+author: "lemmaria-core"
+license: "SEE LICENSE IN LICENSE.txt"
+tags: [length, drafting]
+icon: "unfold"
+
+requires:
+  harness: ">=0.0.1"
+  tools: [count_words]
+  doc_kinds: [latex, markdown]
+
+ui:
+  surfaces: [context_menu, command_palette]
+  group: "edit"
+  requires_selection: false
+
+input:
+  scope: selection
+  scope_fallback: paragraph
+  min_chars: 1
+  # Lower than shrink's 20000: the OUTPUT is the long one here, and the model
+  # has to reproduce the whole passage plus the growth within max_tokens.
+  max_chars: 8000
+
+routing:
+  level: L1
+  thinking_budget: none
+  tools: [count_words]
+  max_iterations: 3
+  max_tokens: 6000
+  timeout_s: 60
+
+model:
+  role: writing
+  temperature: 0.4
+
+# The mirror of shrink-to-target's `reduce_by`: academics think "add 60 words to
+# fill the column", not "reach length L". `grow_by` resolves the validator's
+# target against the selection's current prose count (see the schema spec's
+# word_count row); there is deliberately no absolute `target` parameter — an
+# expansion phrased as a length is the rarer request, and one input keeps the
+# invoke prompt to a single box.
+parameters:
+  - id: add_words
+    name: { en: "Add about how many words", zh: "增加多少字数" }
+    type: integer
+    required: true
+    prompt_on_invoke: true
+    min: 1
+  - id: tolerance
+    name: { en: "Tolerance", zh: "容差" }
+    type: number
+    default: 0.15
+    required: false
+
+context:
+  neighbors: 1
+  include_glossary: true
+  include_profile: [contribution, audience, claims, style]
+  protected_spans: freeze
+
+prompt:
+  system: |
+    You are a precise academic writing assistant working on a {{doc.kind}} document.
+    You develop a passage at greater length WITHOUT changing what it claims.
+    Placeholders like ⟦P0⟧ are frozen content: reproduce each one exactly once,
+    unchanged.
+
+    Expansion means elaboration of what is already there: unpacking a compressed
+    step, naming the mechanism behind a stated result, adding an illustrative
+    example drawn from the passage itself, spelling out a consequence the text
+    already implies, or smoothing a transition.
+
+    You MUST NOT: introduce a new citation key or reference; invent a numeric
+    result, dataset, or experimental detail; assert anything the passage does not
+    already claim; or pad with filler that restates a sentence you just wrote.
+    If you cannot reach the requested length without inventing content, write the
+    most it honestly supports and stop.
+
+    You may call count_words to check a candidate's length before answering.
+    Reply with the revised text only — no preamble, no code fences, no commentary.
+    Preserve the layout exactly: keep every blank line between paragraphs, and keep every list item — merging two paragraphs changes the document, not just how it looks.
+  user: |
+    {{#if profile.audience}}This paper is written for:
+    {{profile.audience}}
+
+    {{/if}}{{#if profile.claims}}These are the paper's claims and headline results. Do not weaken, strengthen or invent one:
+    {{profile.claims}}
+
+    {{/if}}{{#if glossary}}Use these canonical terms exactly:
+    {{glossary}}
+
+    {{/if}}Expand the following {{language}} text by about {{params.add_words}} {{unit}} (current length: {{counts.current}} {{unit}}). Keep every ⟦Pn⟧ placeholder exactly as-is.
+
+    {{selection}}
+
+output:
+  contract: replace_selection
+  language: same_as_input
+  validators:
+    # Soft, like shrink's: the loop retries to hit the length, but a near miss is
+    # proposed with the miss surfaced rather than discarded. Tolerance is looser
+    # than shrink's 0.05 — growing to a word target is harder than cutting to
+    # one, and the honest-stop rule above can legitimately undershoot.
+    - {
+        type: word_count,
+        grow_by: "{{params.add_words}}",
+        tolerance: "{{params.tolerance}}",
+        soft: true,
+      }
+    - { type: protected_spans_intact }
+    - { type: no_new_undefined_refs }
+    # D1 (ADR 0032): the shape of the text survives the rewrite. Soft, and
+    # ONE-SIDED — structure must not decrease. A lost blank line merges two
+    # paragraphs, which in LaTeX is a semantic change to the document rather
+    # than a formatting one; gaining a paragraph is not that harm, which is why
+    # the same declaration is correct on expand as on shrink.
+    - { type: layout_preserved, soft: true }
+    # D1 (ADR 0032) resolves the U6 open question by EXTENDING the validator
+    # rather than narrowing the product-design claim. Its EN-casing half is
+    # meaningful for any action that rewrites prose; its translate-only hard
+    # constraint is gated on params.target_language and simply does not fire
+    # here. Soft, unlike translate's — on Translate glossary fidelity IS the
+    # deliverable, here it is a consistency nicety, and a casing nit must never
+    # discard an otherwise good rewrite.
+    - { type: glossary_consistent, soft: true }
+  on_validation_fail:
+    strategy: retry_with_feedback
+    max_retries: 2
+
+review_ui:
+  mode: inline_diff
+  allow_retry_feedback: true

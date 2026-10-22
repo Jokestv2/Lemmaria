@@ -1,0 +1,3 @@
+model,split,accuracy,f1
+widgetnet,test,0.912,0.904
+baseline,test,0.871,0.860

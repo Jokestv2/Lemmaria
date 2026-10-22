@@ -1,0 +1,94 @@
+schema_version: "1"
+id: "fix-compile-error"
+kind: edit
+version: "2.0.0"
+name: { en: "Fix Compile Error", zh: "修复编译错误" }
+description:
+  en: "Given the compiler report, navigate to the actual defect and repair exactly it with a targeted edit."
+  zh: "根据编译器报告，定位真正的错误位置并做最小化的定点修复。"
+author: "lemmaria-core"
+license: "SEE LICENSE IN LICENSE.txt"
+tags: [verify, fix]
+icon: "wrench"
+
+requires:
+  harness: ">=0.1.0"
+  tools: [get_outline, read_span, grep_project, count_words]
+  doc_kinds: [latex, markdown]
+
+ui:
+  surfaces: [command_palette]
+  group: "edit"
+  requires_selection: false
+
+# The whole document is in scope: the compiler's reported line is routinely NOT
+# where the fix belongs (a runaway argument reports at end-of-file; a mismatched
+# \begin/\end reports at the \end). The model navigates with the retrieval
+# tools; the document text itself is NOT inlined into the prompt.
+input:
+  scope: document
+  scope_fallback: document
+  min_chars: 1
+  max_chars: 500000
+
+routing:
+  level: L1
+  thinking_budget: none
+  tools: [get_outline, read_span, grep_project, count_words]
+  max_iterations: 6
+  max_tokens: 4000
+  timeout_s: 120
+
+model:
+  role: writing
+  temperature: 0.2
+
+parameters:
+  - id: warnings
+    name: { en: "Compiler warnings", zh: "编译器报告" }
+    type: string
+    required: true
+
+context:
+  neighbors: 0
+  include_glossary: false
+  retrieval_budget: 5
+
+prompt:
+  system: |
+    You repair a document that failed to compile. The compiler's reported line
+    is often NOT where the defect is: a runaway argument (unclosed brace)
+    reports at the end of the file; a mismatched \begin/\end reports at the
+    \end line. Use the tools — get_outline to orient, grep_project to find a
+    suspicious token, read_span to see the exact source — to locate the ACTUAL
+    defect before answering.
+
+    When you have found it, reply with ONLY a single JSON object, no prose and
+    no code fence:
+    {"anchor": "<the exact defective text, copied verbatim from the file,
+    extended with surrounding text until it occurs exactly once>",
+    "replacement": "<the minimal repair of that text>"}
+
+    Make the SMALLEST change that fixes the reported error. Never rewrite
+    unrelated prose.
+  user: |
+    The {{doc.kind}} document failed to compile. The compiler reported:
+    {{params.warnings}}
+
+    Find the actual defect and reply with the JSON edit.
+
+# No patch-local validators: latex_balanced / document_structure_intact are
+# whole-document properties and would wrongly reject a legitimate delimiter
+# repair (e.g. \begin{doument} → \begin{document}) when checked against the
+# patch alone. The ENGINE's splice guard (ADR 0007) enforces the corruption
+# defense — a fix can never move a \begin/\end{document} count away from 1.
+output:
+  contract: replace_anchor
+  language: same_as_input
+  on_validation_fail:
+    strategy: retry_with_feedback
+    max_retries: 2
+
+review_ui:
+  mode: inline_diff
+  allow_retry_feedback: true

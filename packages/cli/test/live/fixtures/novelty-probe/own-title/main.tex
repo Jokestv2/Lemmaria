@@ -1,0 +1,166 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\title{Adam: A Method for Stochastic Optimization}
+\author{R. Okonkwo \and L. Bergstrom \and P. Nakamura}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Stochastic gradient methods are sensitive to the choice of a single global
+step size. Per-parameter methods that accumulate squared gradients relieve
+this, but their effective step decays monotonically and eventually stalls.
+Methods that accumulate a running average of the gradient itself smooth the
+descent direction but leave the step size untuned. We propose Dual-Moment
+Adaptive Scaling (DMAS), which maintains exponential moving averages of both
+the gradient and its elementwise square, corrects each for the bias introduced
+by zero initialisation, and forms a step from their ratio. To our knowledge no
+previous optimiser combines a bias-corrected first moment with a
+bias-corrected second moment in a single update. On four benchmarks DMAS
+matches or exceeds tuned per-parameter baselines while requiring no schedule.
+\end{abstract}
+
+\section{Introduction}
+
+Training by stochastic gradient descent requires choosing a step size, and the
+right choice varies by parameter, by layer and by stage of training. The
+classical remedy is a hand-tuned schedule, which transfers poorly between
+architectures and must be re-derived for each new task.
+
+Two families of methods address this automatically. The first accumulates the
+squared gradient per parameter and divides the step by its root, giving
+frequently updated parameters a smaller step. The second accumulates a running
+average of the gradient, damping the oscillation that stochastic estimates
+introduce. Each family fixes what the other leaves alone, and the two have not
+been brought together in a way that keeps the advantages of both.
+
+This paper makes that combination. We maintain two exponential moving
+averages --- one of the gradient, one of its elementwise square --- correct
+both for the bias that zero initialisation introduces, and take a step
+proportional to the ratio of the corrected first moment to the root of the
+corrected second moment. The result needs one global step size, no schedule,
+and no per-layer tuning.
+
+Our contributions are as follows. We introduce the combination of
+bias-corrected first- and second-moment estimates as the basis of a step
+rule, which to the best of our knowledge is new. We derive the correction
+terms in closed form and show that the resulting effective step is bounded by
+the global step size under mild assumptions. We evaluate on four benchmarks
+and report a consistent improvement over per-parameter baselines.
+
+\section{Related work}
+
+Stochastic approximation gives the classical convergence conditions on a
+decaying step size. Momentum accelerates descent along directions of
+consistent gradient sign and is standard in deep network training. Per-
+parameter adaptive methods divide the step by the accumulated root of squared
+gradients, which improves convergence on sparse problems but drives the
+effective step monotonically toward zero.
+
+Later work replaces the running sum of squared gradients with an exponential
+moving average, which removes the monotone decay and keeps the per-parameter
+scaling. That line of work does not smooth the numerator: the step direction
+remains the raw stochastic gradient, and no bias correction is applied to the
+average, so the early steps are systematically too small.
+
+The gap this paper fills is therefore a specific one. No existing method we
+are aware of pairs a smoothed, bias-corrected gradient with a smoothed,
+bias-corrected second moment, and the pairing turns out to matter most in
+exactly the early-training regime where the uncorrected estimates are worst.
+
+\section{Method}
+
+Let $g_t = \nabla_\theta f_t(\theta_{t-1})$ be the stochastic gradient at step
+$t$. DMAS maintains two state vectors, both initialised to zero:
+\begin{align}
+  m_t &= \beta_1 m_{t-1} + (1 - \beta_1) g_t, \\
+  v_t &= \beta_2 v_{t-1} + (1 - \beta_2) g_t^2,
+\end{align}
+where $g_t^2$ denotes the elementwise square and $\beta_1, \beta_2 \in [0,1)$
+are decay rates.
+
+\subsection{The bias of a zero-initialised average}
+
+Because $m_0 = v_0 = 0$, both averages are biased toward zero in the early
+steps. Unrolling the first recursion gives
+\begin{equation}
+  m_t = (1 - \beta_1) \sum_{i=1}^{t} \beta_1^{\,t-i} g_i,
+\end{equation}
+and taking expectations under the assumption that $\mathbb{E}[g_i]$ is
+approximately constant over the averaging window yields
+$\mathbb{E}[m_t] \approx \mathbb{E}[g_t](1 - \beta_1^t)$. The same argument
+applied to the second recursion gives
+$\mathbb{E}[v_t] \approx \mathbb{E}[g_t^2](1 - \beta_2^t)$.
+
+Dividing each average by its own factor removes the bias exactly:
+\begin{equation}
+  \hat{m}_t = \frac{m_t}{1 - \beta_1^t}, \qquad
+  \hat{v}_t = \frac{v_t}{1 - \beta_2^t}.
+\end{equation}
+Correcting both moments rather than one is the step that distinguishes our
+method from previous adaptive schemes.
+
+\subsection{The update}
+
+The parameter update divides the corrected first moment by the root of the
+corrected second moment:
+\begin{equation}
+  \theta_t = \theta_{t-1} - \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t} +
+  \epsilon},
+\end{equation}
+with $\alpha$ the global step size and $\epsilon$ a small constant guarding
+the division. Throughout we use $\beta_1 = 0.9$, $\beta_2 = 0.999$ and
+$\epsilon = 10^{-8}$, which we found to work without tuning on every benchmark
+below.
+
+\subsection{Bounded effective step}
+
+Since $|\hat{m}_t| / \sqrt{\hat{v}_t} \le 1$ whenever the gradient sign is
+consistent, the effective step is bounded above by $\alpha$ regardless of the
+gradient magnitude. This establishes a trust region around the current
+iterate that requires no schedule to maintain, and it is a direct consequence
+of correcting both moments with their respective factors.
+
+\section{Experiments}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Benchmark & Per-parameter baseline & DMAS \\
+\midrule
+Logistic regression (MNIST) & 0.2740 & 0.2631 \\
+Multilayer perceptron (MNIST) & 0.1105 & 0.1042 \\
+Convolutional network (CIFAR-10) & 0.7391 & 0.7018 \\
+Sparse bag-of-words (IMDB) & 0.3552 & 0.3374 \\
+\bottomrule
+\end{tabular}
+\caption{Final training cost, lower is better. Each figure is the mean of
+five seeds.}
+\end{table}
+
+We compare against a per-parameter method with an accumulated squared-gradient
+denominator and against the same method with an exponential moving average in
+place of the accumulation. Both baselines use the step size found best by grid
+search; DMAS uses the default constants given above and is not tuned per task.
+
+Across all four benchmarks DMAS reaches a lower final cost. The margin is
+largest in the first few hundred steps, which is consistent with the bias
+correction being the active ingredient: the uncorrected baselines take
+systematically short steps while their averages are still filling.
+
+\section{Conclusion}
+
+We introduced DMAS, an optimiser that combines bias-corrected first- and
+second-moment estimates into a single per-parameter step rule. The combination
+is, to our knowledge, novel, and it removes the need for a step-size schedule
+without introducing any per-task hyperparameter of its own. Future work should
+examine the behaviour of the correction under non-stationary objectives.
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}

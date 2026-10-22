@@ -1,0 +1,68 @@
+% V4 J1 round fixture (ADR 0082 §4): an acmart sigconf submission as a real
+% one is shaped -- `review` line numbers, the conference running head, and the
+% references opened on a fresh page by \clearpage. Its PDF is what
+% `computePdfFacts` must read as "references begin on page 3, main text 2".
+\documentclass[sigconf, screen, review, anonymous]{acmart}
+
+\acmConference[FIXTURE '26]{The Fixture Conference}{November 2026}{Springfield, USA}
+\setcopyright{none}
+
+\newcommand{\para}{Long-context sequence models spend most of their compute on
+attention, and the share grows with the length of the input. A routing scheme
+that bounds the number of keys each query may read changes that growth from
+quadratic to linear, at the price of a scorer that has to decide which keys are
+worth reading. This paragraph stands in for the prose of a real submission: it
+is long enough to fill a column with ordinary text, and it says nothing a
+reviewer of layout would need to read closely.}
+
+\title{Corridor Attention: A Fixture for the References Page}
+\author{A. Fixture}
+\affiliation{%
+  \institution{Fixture Institute of Computing}
+  \city{Springfield}
+  \country{USA}}
+
+\begin{document}
+
+\begin{abstract}
+A fixture whose only job is its page layout: two pages of body text, and a
+reference list that opens the third page under the running head.
+\end{abstract}
+
+\keywords{fixtures, page layout}
+
+\maketitle
+
+\section{Introduction}
+\para{} Prior work bounds the interaction pattern~\cite{child2019sparse}.
+
+\para
+
+\para
+
+\section{Method}
+\para
+
+\para
+
+\para
+
+\para
+
+\section{Experiments}
+\para
+
+\para
+
+\para
+
+\para
+
+\section{Conclusion}
+\para{} The conclusion ends here, on the second page.
+
+\clearpage
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+
+\end{document}

@@ -1,0 +1,2862 @@
+/* ---- Lemmaria design system (U0) ---------------------------------- */
+/* Tier 1: defer to the active VS Code theme.                          */
+:root {
+  --lm-bg: var(--vscode-sideBar-background);
+  --lm-bg-editor: var(--vscode-editor-background);
+  --lm-bg-panel: var(
+    --vscode-editorWidget-background,
+    var(--vscode-editor-background)
+  );
+  --lm-border: var(
+    --vscode-panel-border,
+    var(--vscode-widget-border, rgba(128, 128, 128, 0.25))
+  );
+  --lm-fg: var(--vscode-foreground);
+  --lm-fg-dim: var(--vscode-descriptionForeground);
+  --lm-fg-faint: var(
+    --vscode-disabledForeground,
+    var(--vscode-descriptionForeground)
+  );
+
+  /* Tier 2: Lemmaria brand — dark defaults; light overridden below. */
+  --lm-accent: #8a7cf0;
+  --lm-accent-soft: rgba(138, 124, 240, 0.16);
+  --lm-green: #4cc26a;
+  --lm-amber: #d8a23e;
+  --lm-red: #e5675f;
+
+  /* Tier 2b: the brand mark's gradient stops (P1, ADR 0072). These are the
+     design pack's own values, and they are the ARTWORK — not a tint to taste.
+     `:root` carries the pack's `dark` set, matching this file's convention that
+     the dark theme is the default and light is overridden below.
+
+     They are custom properties rather than `stop-color` attributes because
+     `stop-color` is a real CSS property: one set of DOM nodes then renders the
+     light, dark and high-contrast marks, which is what keeps `parts/brand.ts`
+     from having to know which theme is active. */
+  --lm-brand-bottom-0: #7751d8;
+  --lm-brand-bottom-1: #9369eb;
+  --lm-brand-middle-0: #d2b4f7;
+  --lm-brand-middle-1: #ab83ef;
+  --lm-brand-top-0: #e6cdfb;
+  --lm-brand-top-1: #c597ec;
+  --lm-brand-overlap-lower-0: #9870e3;
+  --lm-brand-overlap-lower-1: #7a50cc;
+  --lm-brand-overlap-upper-0: #af87ed;
+  --lm-brand-overlap-upper-1: #9163d6;
+
+  --lm-radius-card: 10px;
+  --lm-radius-ctl: 6px;
+  --lm-font: var(
+    --vscode-font-family,
+    -apple-system,
+    "Segoe UI",
+    system-ui,
+    sans-serif
+  );
+}
+
+/* VS Code stamps these classes on <body>; they flip the brand accent so it
+   reads correctly on a light theme — no JS. High-contrast keeps the dark set. */
+body.vscode-light {
+  --lm-accent: #6a5cf0;
+  --lm-accent-soft: rgba(106, 92, 240, 0.1);
+  --lm-green: #1f9e4d;
+  --lm-amber: #b9802a;
+  --lm-red: #cf4a42;
+
+  /* The pack's `primary` set — its name for "on a light background". */
+  --lm-brand-bottom-0: #45259d;
+  --lm-brand-bottom-1: #6541cf;
+  --lm-brand-middle-0: #c7a5f1;
+  --lm-brand-middle-1: #9169df;
+  --lm-brand-top-0: #dec2f5;
+  --lm-brand-top-1: #b37fe1;
+  --lm-brand-overlap-lower-0: #754bcb;
+  --lm-brand-overlap-lower-1: #5932ad;
+  --lm-brand-overlap-upper-0: #9f73de;
+  --lm-brand-overlap-upper-1: #7e4cc5;
+}
+
+/* High contrast: the pack's direction is a monochrome mark, and a five-gradient
+   logo is exactly what a high-contrast theme exists to refuse. Every stop
+   collapses to the theme's own foreground, so the silhouette survives and the
+   colour does not. The overlaps then carry no information, which is correct —
+   at high contrast the shape is the brand. */
+body.vscode-high-contrast,
+body.vscode-high-contrast-light {
+  --lm-brand-bottom-0: currentColor;
+  --lm-brand-bottom-1: currentColor;
+  --lm-brand-middle-0: currentColor;
+  --lm-brand-middle-1: currentColor;
+  --lm-brand-top-0: currentColor;
+  --lm-brand-top-1: currentColor;
+  --lm-brand-overlap-lower-0: currentColor;
+  --lm-brand-overlap-lower-1: currentColor;
+  --lm-brand-overlap-upper-0: currentColor;
+  --lm-brand-overlap-upper-1: currentColor;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--lm-font);
+  font-size: 13px;
+  color: var(--lm-fg);
+  background: var(--lm-bg);
+}
+
+/* Diamond mark: a rounded square rotated 45deg, filled with the accent. */
+.lm-diamond {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: var(--lm-accent);
+  border-radius: 3px;
+  transform: rotate(45deg);
+  flex: none;
+}
+.lm-diamond--sm {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+/* Panel header */
+.lm-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 38px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--lm-border);
+}
+.lm-header__title {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+}
+/* D2 (CHAT-6): the Assistant tab's own strip, carrying the session controls
+   that used to sit in the global header and so showed on every tab. */
+.lm-assistant-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 0 8px;
+  flex: none;
+}
+.lm-iconbtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--lm-fg-dim);
+  cursor: pointer;
+}
+.lm-iconbtn:hover {
+  background: var(--lm-accent-soft);
+}
+
+/* Tab bar */
+.lm-tabs {
+  display: flex;
+  align-items: stretch;
+  height: 33px;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--lm-border);
+}
+.lm-tab {
+  padding: 0 9px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--lm-fg-dim);
+  border-bottom: 2px solid transparent;
+}
+.lm-tab[aria-selected="true"] {
+  color: var(--lm-fg);
+  border-bottom-color: var(--lm-accent);
+}
+
+/* Content + section label */
+.lm-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 14px 6px;
+  overflow-y: auto;
+}
+.lm-section-label {
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  color: var(--lm-fg-faint);
+  padding: 6px 2px 8px;
+}
+
+/* Quick-action grid + tiles */
+.lm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.lm-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: var(--lm-bg-editor);
+  border: 1px solid var(--lm-border);
+  color: var(--lm-fg);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.lm-tile:hover:not([disabled]) {
+  background: var(--lm-accent-soft);
+  border-color: var(--lm-accent);
+}
+.lm-tile[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+.lm-tile__glyph {
+  color: var(--lm-accent);
+  width: 18px;
+  text-align: center;
+}
+.lm-tile__name {
+  flex: 1;
+}
+.lm-tile__tier {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--lm-fg-faint);
+}
+.lm-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border: 1px solid var(--lm-border);
+  border-radius: 4px;
+  color: var(--lm-fg-faint);
+  padding: 0 4px;
+  margin-left: 4px;
+}
+
+/* Buttons */
+.lm-btn {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--lm-radius-ctl);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.lm-btn--primary {
+  background: var(--lm-accent);
+  color: #fff;
+  border: none;
+}
+.lm-btn--secondary {
+  background: var(--lm-bg-editor);
+  color: var(--lm-fg);
+  border: 1px solid var(--lm-border);
+}
+.lm-btn--secondary:hover {
+  border-color: var(--lm-accent);
+}
+
+/* Composer footer */
+.lm-composer {
+  flex: none;
+  border-top: 1px solid var(--lm-border);
+  padding: 10px 12px 12px;
+  /* E2 (ADR 0049): the completion menu is positioned against this box, so it
+     rises out of the composer and over the transcript the way Codex's,
+     Claude Code's and Pi's do. Without it the menu would anchor to the
+     viewport and drift when the grants row or the steering row appears. */
+  position: relative;
+}
+
+/* Context tray + selection chip */
+.lm-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+.lm-context__label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--lm-fg-faint);
+}
+.lm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 3px 3px 8px;
+  border-radius: 7px;
+  background: var(--lm-bg-editor);
+  border: 1px solid var(--lm-border);
+  font-size: 11px;
+  max-width: 212px;
+}
+.lm-chip--live {
+  border-style: dashed;
+  border-color: var(--lm-accent);
+}
+
+/* A4 (ADR 0019): granted-folder chips above the composer. */
+.lm-grants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0 6px;
+}
+.lm-grant {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px 3px 8px;
+  border-radius: 7px;
+  background: var(--lm-bg-editor);
+  border: 1px solid var(--lm-border);
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+  max-width: 212px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lm-grant__x {
+  border: none;
+  background: none;
+  color: var(--lm-fg-dim);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.lm-grant__x:hover {
+  color: var(--lm-fg);
+}
+.lm-grant--add {
+  border-style: dashed;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.lm-grant--add:hover {
+  border-color: var(--lm-accent);
+  color: var(--lm-fg);
+}
+.lm-chip__label {
+  color: var(--lm-fg-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lm-chip__pin {
+  border: none;
+  border-radius: 5px;
+  background: var(--lm-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.lm-chip__pin[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+.lm-composer__box {
+  border: 1px solid var(--lm-border);
+  border-radius: var(--lm-radius-card);
+  background: var(--lm-bg-editor);
+  padding: 9px 11px;
+}
+.lm-composer__box:focus-within {
+  border-color: var(--lm-accent);
+}
+.lm-input {
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--lm-fg);
+  font-family: inherit;
+  font-size: 12.5px;
+  outline: none;
+  resize: none;
+}
+.lm-composer__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+/* E2 (ADR 0049): the composer command menu. */
+.lm-menu {
+  /* Rises OUT of the composer, over the transcript: `bottom: 100%` puts its
+     foot on the composer's head rather than reserving layout for it, so
+     opening the menu never moves the text the user is reading. */
+  position: absolute;
+  bottom: 100%;
+  left: 12px;
+  right: 12px;
+  margin-bottom: 6px;
+  /* The panel's FIRST stacking context, and deliberately the only one: before
+     E2 the word `z-index` did not appear in this file. It has to beat the
+     transcript's own hover affordances (the ⟲ restore and the code-block Copy
+     button), which are positioned but unlayered. */
+  z-index: 10;
+  /* MAX_ROWS = 8 is enforced by `visibleRows()`, so this is the box the eight
+     fit in, not a second bound on how many render. It scrolls rather than
+     clips, on the same rule X4 applied to a wide table. */
+  max-height: 268px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--lm-border);
+  border-radius: var(--lm-radius-card);
+  background: var(--lm-bg-panel);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+.lm-menu__group {
+  padding: 5px 8px 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--lm-fg-faint);
+  text-transform: uppercase;
+}
+.lm-menu__row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: var(--lm-radius-ctl);
+  background: none;
+  color: var(--lm-fg);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.lm-menu__row--on {
+  background: var(--lm-accent-soft);
+}
+.lm-menu__name {
+  flex: none;
+  /* The name is the thing the row inserts, so it never truncates; the
+     description yields instead. */
+  white-space: nowrap;
+}
+.lm-menu__match {
+  font-weight: 700;
+  color: var(--lm-accent);
+}
+/* E3 (D5): a path row takes the whole width and is allowed to ellipsize.
+   It can afford to, and a slug row cannot: a path row carries no description
+   competing for the space, and its name is long by nature where a slug is not.
+   The INSERTED text is never truncated — only its rendering is, which is the
+   distinction the `white-space: nowrap` comment above is protecting. */
+.lm-menu__row--path .lm-menu__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lm-menu__desc {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+}
+.lm-menu__empty {
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: var(--lm-fg-dim);
+}
+/* E3: what the listing could not show (B4 / A6 — counted, never silently
+   dropped). A footer under the rows, and never a row: it is not selectable and
+   the arrow keys cannot reach it. */
+.lm-menu__note {
+  padding: 5px 8px 3px;
+  border-top: 1px solid var(--lm-border);
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: var(--lm-fg-faint);
+}
+.lm-send {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: var(--lm-accent);
+  color: #fff;
+  cursor: pointer;
+}
+.lm-send[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Composer control row: add-context, model/permission pills, ring, spacer. */
+.lm-composer__spacer {
+  flex: 1;
+}
+.lm-addctx {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--lm-border);
+  border-radius: 7px;
+  background: var(--lm-bg);
+  color: var(--lm-fg-dim);
+  cursor: pointer;
+}
+.lm-addctx[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+.lm-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: var(--lm-radius-ctl);
+  background: var(--lm-bg);
+  border: 1px solid var(--lm-border);
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+  font-family: inherit;
+  cursor: default;
+  max-width: 130px;
+}
+.lm-pill[disabled] {
+  opacity: 0.7;
+}
+.lm-pill__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lm-accent);
+  flex: none;
+}
+.lm-pill__dot--auto {
+  background: var(--lm-green);
+}
+.lm-pill__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* D2 (CHAT-8): an actual ring. A conic gradient rather than an SVG arc —
+   createElement("svg") yields an HTMLUnknownElement, so a real arc would mean
+   widening the el() helper with createElementNS for one graphic. The fill
+   percentage arrives as --lm-ring-pct, set through CSSOM (the CSP carries no
+   'unsafe-inline', so a style ATTRIBUTE would be blocked). */
+.lm-ring {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--lm-fg-faint);
+  font-variant-numeric: tabular-nums;
+}
+.lm-ring::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: none;
+  background: conic-gradient(
+    var(--lm-ring-fill, var(--lm-fg-faint)) calc(var(--lm-ring-pct, 0) * 1%),
+    var(--lm-border) 0
+  );
+  /* The hole, so it reads as a ring rather than a pie. */
+  mask: radial-gradient(circle, transparent 52%, #000 54%);
+  -webkit-mask: radial-gradient(circle, transparent 52%, #000 54%);
+}
+/* Unmeasured: the track only. Codex would draw a full ring here and then let
+   it drop on the first real number; A2 made this measurement honest and the
+   ring must not undo that. */
+.lm-ring--unknown::before {
+  background: var(--lm-border);
+}
+/* Pi's thresholds (70 / 90), which is the part that changes what a user does. */
+.lm-ring--ok {
+  --lm-ring-fill: var(--lm-accent, var(--lm-fg-faint));
+}
+.lm-ring--warn {
+  --lm-ring-fill: var(--vscode-editorWarning-foreground, var(--lm-amber));
+  color: var(--vscode-editorWarning-foreground, var(--lm-fg-faint));
+}
+.lm-ring--high {
+  --lm-ring-fill: var(--vscode-editorError-foreground, var(--lm-fg));
+  color: var(--vscode-editorError-foreground, var(--lm-fg));
+}
+
+/* A5: queued steering — what you sent while the agent was mid-task, waiting
+   for the next turn boundary. */
+.lm-steering {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.lm-steering__chip {
+  font-size: 10px;
+  color: var(--lm-fg-dim);
+  background: var(--lm-bg-panel);
+  border: 1px dashed var(--lm-border);
+  border-radius: 10px;
+  padding: 1px 8px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A5: this session's spend, beside the ring. Same faint weight — it informs,
+   it does not compete with the composer. */
+.lm-cost {
+  font-size: 10px;
+  color: var(--lm-fg-faint);
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.lm-cost--empty {
+  display: none;
+}
+
+.lm-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* D2 (QA-4): the query container for the breakpoint below. `@container`
+     rather than `@media`, because the panel's width is the SIDEBAR's, not the
+     viewport's — a user narrowing the sidebar changes nothing a media query
+     can see. The served <body> is empty, so `.lm-app` (created by render()) is
+     the root there is. */
+  container-type: inline-size;
+}
+
+/* D2 (QA-4): the panel's only width breakpoint. Before it, the sole @media in
+   ~1,260 lines was prefers-reduced-motion, so narrowing the sidebar clipped
+   the right-hand quick-action tiles and crowded the composer's seven
+   controls. 300px is just below the 366px design width. */
+@container (max-width: 300px) {
+  .lm-grid {
+    grid-template-columns: 1fr;
+  }
+  .lm-composer__row {
+    flex-wrap: wrap;
+  }
+}
+
+/* Keyboard focus: honor the theme's focus color, always visible. */
+:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, var(--lm-accent));
+  outline-offset: 1px;
+}
+
+/* Tab count badge (Citations) */
+.lm-tab__badge {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--lm-accent-soft);
+  color: var(--lm-accent);
+  border-radius: 9px;
+  padding: 1px 6px;
+  vertical-align: middle;
+}
+
+/* Citations tab */
+.lm-cite-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 2px 2px 12px;
+  border-bottom: 1px solid var(--lm-border);
+}
+.lm-cite-header__text {
+  flex: 1;
+  min-width: 0;
+}
+.lm-cite-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--lm-fg);
+  word-break: break-word;
+}
+.lm-cite-sub {
+  font-size: 10.5px;
+  color: var(--lm-fg-faint);
+  margin-top: 1px;
+}
+.lm-cite-group {
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  color: var(--lm-fg-faint);
+  padding: 11px 2px 5px;
+}
+.lm-cite-group--top {
+  border-top: 1px solid var(--lm-border);
+  margin-top: 6px;
+}
+.lm-cite-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 2px;
+  border-radius: 6px;
+}
+.lm-cite-row--link {
+  cursor: pointer;
+}
+.lm-cite-row--link:hover {
+  background: var(--lm-accent-soft);
+}
+.lm-cite-row__icon {
+  font-size: 13px;
+  line-height: 18px;
+  flex: none;
+}
+.lm-cite-row__body {
+  flex: 1;
+  min-width: 0;
+}
+.lm-cite-row__title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--lm-fg);
+  word-break: break-word;
+}
+.lm-cite-row__detail {
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+  margin-top: 2px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.lm-cite-mono {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.lm-cite-adopt {
+  display: block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--lm-bg-editor);
+  border: 1px solid var(--lm-border);
+  color: var(--lm-fg);
+  cursor: pointer;
+}
+.lm-cite-adopt:hover {
+  border-color: var(--lm-accent);
+}
+/* Review tab: Adopt + Ignore sit side by side under the finding (round 3). */
+.lm-cite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.lm-cite-actions .lm-cite-adopt {
+  display: inline-block;
+  margin-top: 0;
+}
+/* Folded Accepted / Ignored sub-lists — collapsed by default for a clean view. */
+.lm-review-fold {
+  border-top: 1px solid var(--lm-border);
+  margin-top: 6px;
+}
+.lm-review-fold__summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 11px 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--lm-fg-faint);
+}
+.lm-review-fold__summary::-webkit-details-marker {
+  display: none;
+}
+.lm-review-fold__summary::before {
+  content: "▸ ";
+}
+.lm-review-fold[open] > .lm-review-fold__summary::before {
+  content: "▾ ";
+}
+/* ---- R3 (ADR 0061): the blind panel's tab and card ---- */
+/* The evidence line sits in the row's BODY, under the detail line.
+
+   Dim, not faint, and so is every rule below that draws text a reader has to
+   read (the X6 review round). `--lm-fg-faint` is `disabledForeground`, a
+   token for DISABLED controls: it measured ~2.2 : 1 against the panel in
+   Light Modern and in VS Code's default Dark 2026, and the card's third line
+   read as a ghost. What keeps a qualifier quieter than what it qualifies is
+   its size and style, not a colour that stops being legible. */
+.lm-cite-row__evidence {
+  font-size: 10.5px;
+  color: var(--lm-fg-dim);
+  margin-top: 3px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+/* V1 (ADR 0076 §9): where the manuscript answers a withdrawn concern — a
+   button, because it opens that passage, drawn as the evidence line above it
+   is drawn: text a reader reads, so dim and not faint, and no new colour
+   token. The global `:focus-visible` rule gives it its ring. It wraps rather
+   than widening the panel, as the evidence line does. */
+.lm-review-counter {
+  display: block;
+  font: inherit;
+  font-size: 10.5px;
+  color: var(--lm-fg-dim);
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 3px;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  word-break: break-word;
+  /* V1's J1 round: drawn LIKE the evidence line is not the same as drawn AS
+     it. At rest this matched the line above it in size, weight, colour and
+     indentation, with the underline arriving only on hover, and E1's own
+     example finding came back word for word — "Nothing says it opens
+     anything, and I only found out by clicking." The two marks below are the
+     smallest thing that answers it without a new colour token and without
+     making a quiet line loud: it stays dim, and it stops being a twin. */
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+/* Not a decoration: the glyph is what separates this line from the evidence
+   line at a glance, before either is read. */
+.lm-review-counter::before {
+  content: "↗ ";
+}
+.lm-review-counter:hover {
+  text-decoration: underline solid;
+}
+body.vscode-high-contrast .lm-review-counter,
+body.vscode-high-contrast-light .lm-review-counter {
+  color: currentColor;
+}
+/* The verifier's note under it, as authored. */
+.lm-review-counter__note {
+  font-size: 10.5px;
+  color: var(--lm-fg-dim);
+  margin-top: 2px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+/* A synthesis note and the concern ids it is about. */
+.lm-review-note {
+  font-size: 11.5px;
+  color: var(--lm-fg-dim);
+  padding: 6px 2px 2px;
+  line-height: 1.5;
+}
+/* ADR 0075 §4: the same-model qualifier, between a consensus note and its
+   chips — quieter than the note, because it qualifies it: smaller and in
+   italic, in the note's own (legible) colour. */
+.lm-review-note__mark {
+  font-size: 10.5px;
+  font-style: italic;
+  color: var(--lm-fg-dim);
+  margin-top: 3px;
+  word-break: break-word;
+}
+/* A model id, in a heading or in the mark (the X6 review round). It moves to
+   the next line whole instead of breaking at a hyphen (`gpt-` / `5.6-luna`),
+   and keeps its own case inside an uppercase fold heading, because an id is
+   case-sensitive. An inline-block, not `nowrap`: it still wraps inside itself
+   when it is wider than the whole line, so a long id cannot push the panel
+   sideways. A heading's count keeps its unit (`9` / `条意见`) the same way. */
+.lm-review-model {
+  display: inline-block;
+  text-transform: none;
+}
+.lm-review-count {
+  display: inline-block;
+}
+.lm-review-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+.lm-review-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--lm-border);
+  /* A synthesis chip is a click target that names a concern; a running
+     chip's state class (`is-faint` while it works) still overrides this. */
+  color: var(--lm-fg-dim);
+  white-space: nowrap;
+}
+/* ADR 0062 §4: the chip is STATIC; only the ring inside it turns. The glyph
+   and the spinner occupy the same box, so a seat landing does not resize the
+   chip or shove its neighbours along the row. */
+.lm-review-chip__spin,
+.lm-review-chip__glyph {
+  display: inline-block;
+  width: 9px;
+  text-align: center;
+  flex: none;
+}
+/* ADR 0062 §7: a synthesis id chip is a button that goes to its concern. */
+.lm-review-chip--link {
+  font: inherit;
+  font-size: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+.lm-review-chip--link:hover {
+  border-color: var(--lm-accent);
+  color: var(--lm-fg);
+}
+/* ADR 0062 §1: which review this card is. */
+.lm-review-stamp {
+  font-weight: 400;
+  color: var(--lm-fg-faint);
+}
+/* ADR 0062 §1: the version picker at the top of the tab. */
+.lm-review-picker {
+  width: 100%;
+  margin: 8px 0 2px;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--lm-fg);
+  background: var(--lm-bg-editor);
+  border: 1px solid var(--lm-border);
+  border-radius: 6px;
+}
+/* ADR 0062 §3: the manuscript's entry, named as the entry. */
+.lm-review-entry {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 2px 2px;
+  font-size: 10.5px;
+  color: var(--lm-fg-dim);
+}
+.lm-review-entry__label {
+  color: var(--lm-fg-faint);
+}
+.lm-review-entry__file {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  word-break: break-all;
+}
+.lm-review-entry__change {
+  font: inherit;
+  font-size: 10.5px;
+  padding: 0 6px;
+  border-radius: 5px;
+  border: 1px solid var(--lm-border);
+  background: transparent;
+  color: var(--lm-fg-dim);
+  cursor: pointer;
+}
+.lm-review-entry__change:hover {
+  color: var(--lm-fg);
+  border-color: var(--lm-accent);
+}
+/* ADR 0064 §1: the launcher — the entry line above, the verb below, boxed
+   together so it reads as one control rather than as the first row of the
+   results it sits on top of. */
+.lm-review-launch {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid var(--lm-border);
+  border-radius: 8px;
+  background: var(--lm-bg-editor);
+}
+.lm-review-launch .lm-review-entry {
+  padding: 0;
+}
+/* Full width: it is the tab's primary action, and a sidebar is narrow enough
+   that a button sized to its label reads as an afterthought. */
+.lm-review-launch__run {
+  width: 100%;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--lm-accent);
+  background: transparent;
+  color: var(--lm-fg);
+  cursor: pointer;
+}
+.lm-review-launch__run:hover:not(:disabled) {
+  background: var(--lm-accent-soft);
+}
+.lm-review-launch__run:disabled {
+  color: var(--lm-fg-faint);
+  border-color: var(--lm-border);
+  cursor: default;
+}
+/* V4 (ADR 0081 §8): the launcher's second verb, *Review the PDF*. The run
+   button's shape with a quieter border, so the two read as two verbs of one
+   launcher and not as the primary action drawn twice. */
+.lm-review-launch__pdf {
+  width: 100%;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--lm-border);
+  background: transparent;
+  color: var(--lm-fg);
+  cursor: pointer;
+}
+.lm-review-launch__pdf:hover:not(:disabled) {
+  border-color: var(--lm-accent);
+  background: var(--lm-accent-soft);
+}
+.lm-review-launch__pdf:disabled {
+  color: var(--lm-fg-faint);
+  cursor: default;
+}
+/* V4 (ADR 0081 §1): the facts about the compiled PDF — boxed like the
+   launcher and unlike a concern card, so it reads as measurement: no glyph,
+   no severity, nothing to click. */
+.lm-review-pdffacts {
+  margin: 0 0 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--lm-border);
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.lm-review-pdffacts__title {
+  font-weight: 600;
+  color: var(--lm-fg);
+  margin-bottom: 2px;
+}
+/* J1's round: a hanging indent, so a fact that wraps at a narrow side bar
+   reads as one fact — its continuation lines sit in from the next fact's. */
+.lm-review-pdffacts__line {
+  color: var(--lm-fg-dim);
+  overflow-wrap: anywhere;
+  padding-left: 1em;
+  text-indent: -1em;
+}
+/* V4 (ADR 0081 §5): the PDF reviewer's group says once, under its heading,
+   that its concerns were not checked — dim, like the cause line beside it. */
+.lm-review-unchecked {
+  font-size: 11px;
+  line-height: 1.45;
+  padding: 2px 2px 6px;
+  color: var(--lm-fg-dim);
+}
+/* ---- ADR 0062: the Review tab only. `.lm-cite-row` and `.lm-cite-group` are
+   shared with Citations and Compile, so every rule below is scoped — a review
+   concern is a card the reader triages, a citation row is a list item. ---- */
+/* §5: a thin outline per concern, so one finding reads as one thing. */
+.lm-review-tab .lm-cite-row {
+  border: 1px solid var(--lm-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 5px 0;
+}
+.lm-review-tab .lm-cite-row--link:hover {
+  border-color: var(--lm-accent);
+}
+/* ADR 0075 §6: a concern's id line is its own line. `citeRow` builds the
+   message and the detail as two adjacent inline spans, which is right for a
+   Citations or Compile row (one line each) and glued the id to the end of a
+   review concern's message. Scoped here, so those rows keep the inline flow;
+   as a block, the detail's existing `margin-top` finally takes effect. */
+.lm-review-tab .lm-cite-row__detail {
+  display: block;
+}
+/* §7: where the click from a synthesis chip landed. A self-ending animation
+   rather than a timer — the reduced-motion rule below turns it off. */
+@keyframes lm-review-flash {
+  from {
+    background: var(--lm-accent-soft);
+    border-color: var(--lm-accent);
+  }
+}
+.lm-review-tab .lm-cite-row.is-target {
+  animation: lm-review-flash 1.6s ease-out;
+}
+/* The pending count under the results title — how much is left to deal with
+   — in the same legible register as the panel line beneath it. Scoped: the
+   Citations and Compile headers keep the shared, fainter sub-line. */
+.lm-review-tab .lm-cite-sub {
+  color: var(--lm-fg-dim);
+}
+/* §4: the group headings carry the tab's structure, so they are read before
+   anything under them — larger, and in the foreground colour. */
+.lm-review-tab .lm-review-fold--group > .lm-review-fold__summary {
+  font-size: 11.5px;
+  letter-spacing: 0.4px;
+  color: var(--lm-fg-dim);
+  padding: 13px 2px 7px;
+}
+.lm-review-tab .lm-review-fold--group > .lm-review-fold__summary:hover {
+  color: var(--lm-fg);
+}
+/* One sentence per entry of the honesty record — and, since ADR 0086, the
+   sentence heading each rule in the set-aside fold. */
+/* ADR 0086: a set-aside concern, set in under its rule's sentence — a record
+   of what the rule caught, not a card to triage, so no border and no hover. */
+.lm-review-aside__concern {
+  margin-left: 12px;
+}
+.lm-review-limit,
+.lm-review-aside__rule {
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+  padding: 4px 2px;
+  line-height: 1.45;
+}
+/* ADR 0075 §2: why a reviewer, or the cross-review, failed — our sentence,
+   then the provider's words. Those are shown whole and may carry an unbroken
+   token (a request id, a URL), so they wrap anywhere rather than widening the
+   panel; clamping them would be rewriting someone else's sentence. */
+.lm-review-cause {
+  font-size: 11px;
+  line-height: 1.45;
+  padding: 2px 2px 6px;
+}
+.lm-review-cause__ours {
+  color: var(--lm-fg-dim);
+}
+.lm-review-cause__theirs {
+  color: var(--lm-fg-dim);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+/* ADR 0075 §3: the results header's one line about the panel — a qualifier
+   under the title and the count, in the sub-line's own register so it reads
+   as context and not as a finding. That register is the Review tab's scoped
+   `.lm-cite-sub` rule; until the X6 review round the count was faint and this
+   line dim, so the qualifier outweighed the figure above it. */
+.lm-review-panelline {
+  font-size: 10.5px;
+  color: var(--lm-fg-dim);
+  margin-top: 2px;
+  word-break: break-word;
+}
+/* The transcript card. */
+.lm-msg-review {
+  border: 1px solid var(--lm-border);
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: var(--lm-bg-editor);
+}
+.lm-review-focus {
+  font-weight: 400;
+  color: var(--lm-fg-faint);
+}
+.lm-review-sub {
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+  margin-top: 5px;
+}
+/* ---- ADR 0065 §3: the running panel, inside the launcher. The transcript
+   card's own rules (`.lm-review-chips`, `.lm-review-stamp`, `.lm-review-sub`,
+   `.lm-review-focus`) are reused unchanged — the block is the card's contents
+   without the card, so restyling them would have made a move look like a
+   redesign. `.lm-review-open` and `.lm-review-head` went with the card. ---- */
+.lm-review-progress {
+  padding-top: 2px;
+  border-top: 1px solid var(--lm-border);
+}
+.lm-review-progress .lm-review-stamp,
+.lm-review-progress .lm-review-focus {
+  font-size: 11px;
+  color: var(--lm-fg-faint);
+}
+/* A refused precondition, in the reader's language. Dimmer than the sub-line
+   above it: the sub-line says what happened, this says why. */
+.lm-review-notice {
+  font-size: 11px;
+  color: var(--lm-fg-faint);
+  margin-top: 4px;
+}
+.lm-review-stop {
+  margin-top: 7px;
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid var(--lm-border);
+  background: transparent;
+  color: var(--lm-fg-dim);
+  cursor: pointer;
+}
+.lm-review-stop:hover {
+  color: var(--lm-fg);
+}
+.lm-cite-footer {
+  margin: 10px 0 4px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--lm-bg-editor);
+  border: 1px solid var(--lm-border);
+  font-size: 10.5px;
+  color: var(--lm-fg-faint);
+  line-height: 1.5;
+}
+.lm-cite-lock {
+  color: var(--lm-accent);
+  margin-right: 5px;
+}
+.lm-cite-empty {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--lm-fg-dim);
+}
+/* Severity colors (icon + title share the class). */
+.is-error {
+  color: var(--lm-red);
+}
+.is-warning {
+  color: var(--lm-amber);
+}
+.is-ok {
+  color: var(--lm-green);
+}
+.is-faint {
+  color: var(--lm-fg-faint);
+}
+/* V6: text a reader has to read, where a severity class would have made it
+   faint — an info concern's title. `--lm-fg-faint` is the DISABLED token. */
+.is-dim {
+  color: var(--lm-fg-dim);
+}
+/* C2 spinner — reduced-motion is honored by the global rule below. */
+@keyframes lm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.lm-spin {
+  display: inline-block;
+  animation: lm-spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---- Models tab (U3) ---- */
+.lm-msub {
+  font-size: 11px;
+  color: var(--lm-fg-faint);
+  margin: 2px 0 8px;
+  line-height: 1.5;
+}
+.lm-msection {
+  margin-top: 16px;
+}
+.lm-mcard {
+  border: 1px solid var(--lm-border);
+  border-radius: 9px;
+  background: var(--lm-bg-editor);
+  padding: 10px 11px;
+  margin-bottom: 7px;
+}
+.lm-mcard--shell {
+  opacity: 0.62;
+}
+.lm-mcard__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.lm-mcard__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-block;
+}
+.lm-mcard__dot--accent {
+  background: var(--lm-accent);
+}
+.lm-mcard__dot--green {
+  background: var(--lm-green);
+}
+.lm-mcard__dot--amber {
+  background: var(--lm-amber);
+}
+/* V4 (ADR 0081 §8): the fourth role card, PDF review. */
+.lm-mcard__dot--red {
+  background: var(--lm-red);
+}
+.lm-mcard__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lm-fg);
+  flex: 1;
+}
+.lm-mcard__desc {
+  font-size: 11px;
+  color: var(--lm-fg-faint);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+.lm-mcard__select {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 9px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--lm-border);
+  background: var(--lm-bg);
+  color: var(--lm-fg);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.lm-mcard__select:hover {
+  border-color: var(--lm-accent);
+}
+.lm-mcard__select-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lm-mcard__chev {
+  color: var(--lm-fg-faint);
+  margin-left: 6px;
+}
+.lm-dashed-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px dashed var(--lm-border);
+  background: transparent;
+  color: var(--lm-fg-dim);
+  font-size: 11.5px;
+  font-family: inherit;
+  cursor: pointer;
+  margin: 2px 0 4px;
+}
+.lm-dashed-btn:not(:disabled):hover {
+  border-color: var(--lm-accent);
+  color: var(--lm-fg);
+}
+.lm-dashed-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* `flex-wrap` is load-bearing: `.lm-mrow__setkey` and `.m-image-input-row`
+   take a line of their own through `flex-basis: 100%`, which only starts a new
+   line in a container that wraps. Without it both were squeezed into the head
+   line and `.lm-mrow__body` got 0px (V3's E1 round, 2026-09-22). */
+.lm-mrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--lm-border);
+  border-radius: 9px;
+  background: var(--lm-bg-editor);
+  padding: 9px 11px;
+  margin-bottom: 7px;
+}
+.lm-mrow__body {
+  flex: 1;
+  min-width: 0;
+}
+.lm-mrow__name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--lm-fg);
+}
+.lm-mrow__models {
+  font-size: 11px;
+  color: var(--lm-fg-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lm-mrow__endpoint {
+  font-size: 10px;
+}
+.lm-mrow__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  flex: none;
+}
+.lm-mrow__statusdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.lm-usage {
+  border: 1px solid var(--lm-border);
+  border-radius: 9px;
+  background: var(--lm-bg-editor);
+  overflow: hidden;
+  font-size: 11.5px;
+}
+.lm-usage__head {
+  display: flex;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--lm-border);
+  color: var(--lm-fg-faint);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.lm-usage__row {
+  display: flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--lm-border);
+}
+.lm-usage__row:last-child {
+  border-bottom: none;
+}
+.lm-usage__model {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--lm-fg);
+}
+.lm-usage__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lm-usage__num {
+  width: 56px;
+  text-align: right;
+  flex: none;
+  color: var(--lm-fg);
+}
+.lm-usage__total {
+  font-weight: 600;
+}
+.lm-usage__empty {
+  padding: 12px 11px;
+  color: var(--lm-fg-faint);
+  text-align: center;
+}
+.lm-usage__summary {
+  font-size: 10.5px;
+  color: var(--lm-fg-faint);
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
+/* Models tab — multi-model config (revised U3) */
+.lm-hidden {
+  display: none !important;
+}
+.lm-mcard__modelselect {
+  margin-top: 6px;
+  width: 100%;
+  padding: 4px 6px;
+  background: var(--lm-input-bg, var(--vscode-input-background));
+  color: var(--lm-fg, var(--vscode-input-foreground));
+  border: 1px solid var(--lm-border, var(--vscode-input-border, transparent));
+  border-radius: 4px;
+  font: inherit;
+}
+/* R9 (ADR 0069 D8): the Reviewers card's rows. The select is the same control
+   the Writing card uses, so it keeps `.lm-mcard__modelselect`; the row only
+   sets the remove button beside it. */
+.lm-mrole {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lm-mrole > .lm-mcard__modelselect {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lm-mrole__remove {
+  background: none;
+  border: none;
+  color: var(--lm-faint, var(--vscode-descriptionForeground));
+  cursor: pointer;
+  padding: 0 4px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.lm-mrole__remove:hover:not(:disabled) {
+  color: var(--lm-fg, var(--vscode-foreground));
+}
+.lm-mrole__remove:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.lm-mrole__add {
+  margin-top: 8px;
+  width: 100%;
+}
+.lm-mcard__hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--lm-faint, var(--vscode-descriptionForeground));
+}
+/* V4 (ADR 0081 §8): the PDF review card's notice when its model cannot see —
+   advice, so the hint's own size with the readable dim colour and an amber
+   rule beside it, never the error red. */
+.lm-mcard__blind {
+  color: var(--lm-fg-dim);
+  border-left: 2px solid var(--lm-amber);
+  padding-left: 6px;
+}
+/* V1 (ADR 0076 §8): the Cross-review card's second control is labelled — the
+   card's own title names the first. Dim: it is a label a reader reads. */
+.lm-mcard__sublabel {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+}
+.lm-tag--active {
+  margin-left: 6px;
+  color: var(--lm-accent, var(--vscode-textLink-foreground));
+  border-color: currentColor;
+}
+.lm-mrow__remove {
+  background: none;
+  border: none;
+  color: var(--lm-faint, var(--vscode-descriptionForeground));
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 12px;
+}
+.lm-mrow__remove:hover {
+  color: var(--lm-fg, var(--vscode-foreground));
+}
+.lm-mrow__setkey {
+  display: flex;
+  gap: 6px;
+  flex-basis: 100%;
+  margin-top: 6px;
+}
+/* The field shrinks and the button keeps its label whole: `设置密钥`, squeezed,
+   stacks one character per line. Scoped here because the add-model form's
+   Save button shares `.lm-mform__save`. */
+.lm-mrow__setkey .lm-mform__save {
+  flex: none;
+}
+/* V3 (ADR 0080 §6): the per-model image-input override. Full-width under the
+   row's own line, like the set-key affordance above it, so the select reads as
+   part of its model rather than as a sibling of the Remove button. */
+.m-image-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-basis: 100%;
+  margin-top: 6px;
+  font-size: 0.9em;
+}
+.m-image-input-label {
+  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
+}
+.m-image-input {
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--lm-border, var(--vscode-input-border, transparent));
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.lm-mform {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  margin: 6px 0;
+  border: 1px solid var(--lm-border, var(--vscode-input-border, transparent));
+  border-radius: 6px;
+  background: var(--lm-card-bg, var(--vscode-editorWidget-background));
+}
+.lm-mform__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lm-mform__label {
+  font-size: 11px;
+  color: var(--lm-faint, var(--vscode-descriptionForeground));
+}
+.lm-mform__input {
+  width: 100%;
+  padding: 4px 6px;
+  background: var(--lm-input-bg, var(--vscode-input-background));
+  color: var(--lm-fg, var(--vscode-input-foreground));
+  border: 1px solid var(--lm-border, var(--vscode-input-border, transparent));
+  border-radius: 4px;
+  font: inherit;
+  box-sizing: border-box;
+}
+.lm-mform__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.lm-mform__save {
+  background: var(--lm-accent, var(--vscode-button-background));
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.lm-mform__cancel {
+  background: none;
+  color: var(--lm-fg, var(--vscode-foreground));
+  border: 1px solid var(--lm-border, var(--vscode-input-border, transparent));
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* ---- Venue tab (U4) ---- */
+.lm-venue-card {
+  border: 1px solid var(--lm-border);
+  border-radius: var(--lm-radius-card);
+  background: var(--lm-bg-panel);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.lm-venue-card__head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.lm-venue-card__title {
+  font-weight: 600;
+}
+.lm-venue-card__class {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+}
+.lm-venue-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.lm-venue-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--lm-border);
+  border-radius: 999px;
+  color: var(--lm-fg-dim);
+}
+.lm-venue-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--lm-fg-faint);
+}
+.lm-venue-desc {
+  font-size: 12px;
+  color: var(--lm-fg-dim);
+  margin: 4px 0 8px;
+}
+.lm-check-row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 4px;
+  align-items: flex-start;
+}
+.lm-check-row--link {
+  cursor: pointer;
+  border-radius: var(--lm-radius-ctl);
+}
+.lm-check-row--link:hover {
+  background: var(--lm-accent-soft);
+}
+.lm-check-glyph {
+  width: 14px;
+  text-align: center;
+  font-weight: 700;
+}
+.lm-check--pass .lm-check-glyph {
+  color: var(--lm-green);
+}
+.lm-check--fail .lm-check-glyph {
+  color: var(--lm-red);
+}
+.lm-check--unknown .lm-check-glyph {
+  color: var(--lm-fg-faint);
+}
+.lm-check-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+.lm-check-detail {
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+}
+
+/* ---- A0 session transcript ---- */
+.lm-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 12px;
+}
+.lm-msg {
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.lm-msg-user {
+  align-self: flex-end;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  max-width: 85%;
+  position: relative;
+}
+/* A1b: the ⟲ rewind affordance, quiet until the bubble is hovered/focused. */
+.lm-msg-user__restore {
+  position: absolute;
+  top: 2px;
+  right: -22px;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--lm-fg-dim);
+  opacity: 0;
+  transition: opacity 0.12s ease-in-out;
+}
+.lm-msg-user:hover .lm-msg-user__restore,
+.lm-msg-user__restore:focus-visible {
+  opacity: 1;
+}
+.lm-msg-user__restore:hover {
+  color: var(--vscode-foreground);
+}
+/*
+ * E7 (ADR 0055): the count, drawn as a superscript through CSS rather than
+ * with the ⁰¹²³ characters — those fall back inconsistently across the fonts a
+ * panel may resolve. (What a screen reader announces is the control's
+ * `aria-label`, which carries the number as a sentence; this node's digit is
+ * never read out. The plain digit still matters as the thing the PROBE reads.)
+ *
+ * The control is `position: absolute; right: -22px`, so its RIGHT edge is
+ * pinned and this grows the box leftward, into the bubble's 10px right
+ * padding. That is why the annotation is deliberately narrow, and why the
+ * probe suite asserts the transcript still does not overflow with it drawn.
+ */
+.lm-msg-user__restore-count {
+  font-size: 0.75em;
+  vertical-align: super;
+  line-height: 1;
+  margin-left: 1px;
+}
+/*
+ * E6 (D8, ADR 0058 §4): the ⟲ popover — three arms, and the consent card that
+ * replaced `showWarningMessage({ modal: true })`.
+ *
+ * Anchored to the bubble (`.lm-msg-user` is the positioned ancestor above) and
+ * hung UNDER the control on `top: 100%`, so opening it reserves no layout and
+ * never moves the transcript the reader is in the middle of.
+ */
+.lm-rewind {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  /* Above `.lm-menu`'s 10, the panel's only other layer: both are overlays,
+     and this one was opened by a deliberate click on the message it hangs
+     from. */
+  z-index: 11;
+  min-width: 200px;
+  max-width: 280px;
+  padding: 4px;
+  border: 1px solid var(--lm-border);
+  border-radius: var(--lm-radius-card);
+  background: var(--lm-bg-panel);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  /* The bubble paints its text in the button palette; this is panel chrome
+     sitting inside it, and must not inherit that. */
+  color: var(--lm-fg);
+  text-align: left;
+  cursor: default;
+}
+.lm-rewind__arm {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: var(--lm-radius-ctl);
+  background: none;
+  color: var(--lm-fg);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.lm-rewind__arm:enabled:hover,
+.lm-rewind__arm:focus-visible {
+  background: var(--lm-accent-soft);
+}
+/* The arms go quiet while the host computes the plan behind a restoring one. */
+.lm-rewind__arm:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.lm-rewind__ask {
+  padding: 5px 8px 3px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.lm-rewind__heading {
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--lm-fg-dim);
+}
+.lm-rewind__files {
+  margin: 0;
+  padding: 0 8px 4px;
+  list-style: none;
+}
+.lm-rewind__file,
+.lm-rewind__deletion {
+  font-family: var(--vscode-editor-font-family), monospace;
+  font-size: 11.5px;
+  /* Every path is named IN FULL before a file is written (invariant 3), so a
+     long one wraps rather than being cut: an elided path is a file the user
+     was not actually shown. */
+  overflow-wrap: anywhere;
+}
+.lm-rewind__more,
+.lm-rewind__none {
+  font-size: 11.5px;
+  color: var(--lm-fg-faint);
+}
+.lm-rewind__none {
+  padding: 3px 8px 5px;
+}
+.lm-rewind__actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  padding: 4px 4px 2px;
+}
+.lm-rewind__confirm,
+.lm-rewind__cancel {
+  padding: 4px 10px;
+  border-radius: var(--lm-radius-ctl);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.lm-rewind__confirm {
+  border: 1px solid transparent;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+.lm-rewind__cancel {
+  border: 1px solid var(--lm-border);
+  background: none;
+  color: var(--lm-fg);
+}
+.lm-msg-agent {
+  align-self: flex-start;
+  background: var(--lm-bg-panel);
+  border: 1px solid var(--vscode-widget-border, transparent);
+  max-width: 95%;
+}
+
+/* D3 (CHAT-2, ADR 0039): the agent bubble renders a Markdown subset, so it now
+   carries block children. `.lm-msg`'s `white-space: pre-wrap` would render the
+   whitespace BETWEEN those blocks as blank lines, so the rule moves down to the
+   paragraph — where it still does the job it was doing, keeping a soft line
+   break inside a paragraph visible. Every other `.lm-msg` variant, the user
+   bubble included, is untouched. */
+/* `.lm-msg.lm-md`, not `.lm-md`: both would be one class, so a bare `.lm-md`
+   would beat `.lm-msg`'s `pre-wrap` only by source order, and reordering this
+   stylesheet would silently bring the blank lines back with a green suite. */
+.lm-msg.lm-md {
+  white-space: normal;
+}
+.lm-md > :first-child {
+  margin-top: 0;
+}
+.lm-md > :last-child {
+  margin-bottom: 0;
+}
+.lm-md__p {
+  margin: 0 0 6px;
+  white-space: pre-wrap;
+}
+.lm-md__h {
+  margin: 12px 0 4px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+/* D3 round 2: a geometric 1.15x ladder off the 12px bubble — 21 / 18.2 / 15.8 /
+   13.8px. Round 1 shipped 1.35/1.2/1.08/1em and the operator could not tell h2,
+   h3 and h4 apart; the ratios there were 1.125x, 1.111x and 1.080x, and the two
+   that failed are exactly the two below 1.12x. The reference (the Claude Code
+   extension's own webview) declares NO heading scale at all — its headings are
+   Chromium UA defaults, whose 2em h1 is too large for a 366px sidebar — so this
+   is written rather than borrowed. Asserted as ratios, not absolute sizes, in
+   `test-webview/styles.test.ts`. */
+h1.lm-md__h {
+  font-size: 1.75em;
+  font-weight: 700;
+}
+h2.lm-md__h {
+  font-size: 1.52em;
+  font-weight: 700;
+}
+h3.lm-md__h {
+  font-size: 1.32em;
+}
+h4.lm-md__h {
+  font-size: 1.15em;
+}
+/* Below h4 there is no room left above 12px body text, so h5 and h6 stop being a
+   size and become a colour — an honest "smallest heading" rather than a size
+   difference nobody can see. */
+h5.lm-md__h,
+h6.lm-md__h {
+  font-size: 1em;
+  color: var(--lm-fg-dim);
+}
+.lm-md__list {
+  margin: 0 0 6px;
+  padding-left: 20px;
+}
+.lm-md__list .lm-md__list {
+  margin-bottom: 0;
+}
+.lm-md__code {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--vscode-textCodeBlock-background, var(--lm-bg-panel));
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.92em;
+}
+.lm-md__pre {
+  margin: 0 0 6px;
+  padding: 6px 8px;
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 4px;
+  background: var(--vscode-textCodeBlock-background, var(--lm-bg-panel));
+  overflow: auto;
+}
+/* ADR 0040 §2: while the fence is open the block grows — the 240px clamp lands
+   at the closing backtick, so a streaming block behaves like ordinary streamed
+   prose and the transcript's own follow-the-bottom logic is the only scroll
+   involved. Written as `.lm-md__pre.lm-md__pre--open`, not as a bare
+   `.lm-md__pre--open`: both are one class, so a bare selector would win only by
+   source order and reordering this file would silently re-clamp a streaming
+   block with the suite still green. The same trap `.lm-msg.lm-md` documents
+   fifty lines up. */
+.lm-md__pre.lm-md__pre--open {
+  max-height: none;
+}
+/* A code block scrolls sideways rather than breaking mid-token. This is the one
+   place `.lm-tool__raw` was the wrong thing to reuse: its `word-break:
+   break-all` is right for a JSON blob and wrong for code, which is read line by
+   line. */
+.lm-md__pre .lm-md__code {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  white-space: pre;
+}
+/* ADR 0040 §4: code-block chrome, adapted from the Claude Code VS Code
+   extension's own webview — `div.codeBlockWrapper{position:relative}` with
+   exactly two children (the copy button, then the pre), the button absolute at
+   top:4px/right:4px, revealed on WRAPPER hover over .15s, a 14px icon in 4px
+   padding. Deliberately NO header strip and no language label: the reference has
+   neither, and a label is a third deliverable. Diverged where that reference is
+   thin — it declares no background on its code block and no height bound at all,
+   and both of ours are deliberate (the `--vscode-textCodeBlock-background` above
+   and ADR 0040 §2's clamp). */
+.lm-md__codeblock {
+  position: relative;
+  margin: 0 0 6px;
+}
+/* The wrapper owns the spacing, so a wrapped block does not carry it twice. A
+   block with no chrome keeps `.lm-md__pre`'s own margin, untouched. */
+.lm-md__codeblock > .lm-md__pre {
+  margin: 0;
+}
+.lm-md__copy {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 1px solid
+    var(--vscode-input-border, var(--vscode-widget-border, transparent));
+  border-radius: 4px;
+  background: var(--lm-bg-editor);
+  color: var(--lm-fg-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out, background 0.15s ease-in-out;
+}
+/* Revealed by hovering the BLOCK, not the button — a control you must already be
+   hovering to see is not discoverable. `:focus-visible` is the keyboard half:
+   the button stays in the tab order at opacity 0, as the reference's does. */
+.lm-md__codeblock:hover .lm-md__copy,
+.lm-md__copy:focus-visible {
+  opacity: 1;
+}
+.lm-md__copy:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--lm-fg);
+}
+/* Scoped through the wrapper so it MATCHES the reveal rule's specificity (0,3,0)
+   and wins on source order. As a bare `.lm-md__copy:active` it is (0,2,0), which
+   the reveal rule outranks — the press feedback would never have appeared for a
+   pointer user, since revealing the button requires hovering the block. */
+.lm-md__codeblock .lm-md__copy:active {
+  opacity: 0.7;
+}
+.lm-md__copy svg {
+  width: 14px;
+  height: 14px;
+}
+/* Compound, not a bare `.lm-md__copy--done`: both are one class, so a bare
+   selector wins only by source order — the same trap `.lm-msg.lm-md` and
+   `.lm-md__pre.lm-md__pre--open` each document. Two classes also lets the tick's
+   colour beat `.lm-md__copy:hover`, which is the state the user is in at the
+   moment they press it and which would otherwise repaint the confirmation back
+   to the ordinary foreground. */
+.lm-md__copy.lm-md__copy--done {
+  opacity: 1;
+  color: var(--lm-green);
+}
+.lm-md__link {
+  color: var(--vscode-textLink-foreground);
+}
+/* X4 (ADR 0044): the subset widens to tables and blockquotes.
+
+   The WRAPPER is the scroll container, not the table: a four-column comparison
+   does not fit a ~366px sidebar, and without a container of its own the table
+   would widen the bubble and take the whole transcript sideways with it. This
+   is `.lm-md__pre`'s answer sixty lines up, applied to the other block that can
+   be arbitrarily wide. */
+.lm-md__tablewrap {
+  margin: 0 0 6px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+/* Deliberately NOT `width: 100%`: a two-column table stretched across the panel
+   puts a hand's width of empty space between the label and its value, which
+   reads worse than a table that is only as wide as its content. */
+.lm-md__table {
+  border-collapse: collapse;
+}
+.lm-md__cell {
+  padding: 3px 8px;
+  border: 1px solid var(--lm-border);
+  text-align: left;
+  vertical-align: top;
+}
+/* The header row is a weight and a ground, not a size — 12px body text has no
+   room above it, the same reasoning that turned h5/h6 into a colour. Written as
+   `th.lm-md__cell`, the same element-plus-class shape `h1.lm-md__h` already
+   uses: it declares no `text-align`, so it cannot collide with the alignment
+   modifiers below, which outrank it two classes to one anyway. */
+th.lm-md__cell {
+  font-weight: 600;
+  background: var(--lm-bg-panel);
+}
+/* Scoped through `.lm-md__table` so these beat `.lm-md__cell`'s own
+   `text-align`. As bare `.lm-md__cell--right` they are (0,1,0), the same
+   specificity as the base rule, and would win only by source order —
+   reordering this stylesheet would silently drop every author's alignment with
+   the suite still green. The same trap `.lm-msg.lm-md` and
+   `.lm-md__pre.lm-md__pre--open` each document above. */
+.lm-md__table .lm-md__cell--left {
+  text-align: left;
+}
+.lm-md__table .lm-md__cell--center {
+  text-align: center;
+}
+.lm-md__table .lm-md__cell--right {
+  text-align: right;
+}
+/* A quote is a rule and an inset, never a background: the transcript already
+   stacks tinted bubbles, and a fourth ground in the stack stops reading as
+   emphasis. */
+.lm-md__quote {
+  margin: 0 0 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--lm-border);
+  color: var(--lm-fg-dim);
+}
+.lm-md__quote > :last-child {
+  margin-bottom: 0;
+}
+.lm-msg-error {
+  align-self: stretch;
+  color: var(--vscode-errorForeground);
+  border: 1px solid var(--vscode-errorForeground);
+}
+/* P1: the row gained the brand's compact ring. WHEN it appears is unchanged
+   and still lives in `parts/busy.ts`; this is only what it looks like. */
+.lm-msg-busy {
+  align-self: flex-start;
+  color: var(--lm-fg-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lm-msg-busy__label {
+  font-style: italic;
+}
+/* A1a transcript items: tool calls, the todo plan, honest notices. */
+.lm-msg-tool {
+  align-self: flex-start;
+  color: var(--lm-fg-dim);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.92em;
+}
+
+/* A5: the tool row is a <details> — its summary is the one-line "what it did",
+   expanding to the raw args/result for anyone who wants the whole story. */
+.lm-tool__head {
+  cursor: pointer;
+  list-style: none;
+}
+.lm-tool__head::-webkit-details-marker {
+  display: none;
+}
+.lm-tool__raw {
+  margin: 4px 0 0;
+  padding: 6px 8px;
+  background: var(--lm-bg-panel);
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 240px;
+  overflow-y: auto;
+  color: var(--lm-fg-faint);
+}
+
+/* A5: the model's own thinking summary — present, dim, collapsed, and never
+   mistakable for the answer. */
+.lm-msg-reasoning {
+  align-self: flex-start;
+  color: var(--lm-fg-faint);
+  font-size: 0.92em;
+}
+.lm-reasoning__head {
+  cursor: pointer;
+  list-style: none;
+}
+.lm-reasoning__head::-webkit-details-marker {
+  display: none;
+}
+.lm-reasoning__body {
+  margin-top: 4px;
+  white-space: pre-wrap;
+  border-left: 2px solid var(--lm-border);
+  padding-left: 8px;
+}
+.lm-msg-todo {
+  align-self: flex-start;
+  background: var(--lm-bg-panel);
+  border: 1px solid var(--vscode-widget-border, transparent);
+  max-width: 95%;
+}
+.lm-todo__title {
+  color: var(--lm-fg-dim);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.lm-todo__row {
+  line-height: 1.5;
+}
+.lm-msg-notice {
+  align-self: stretch;
+  color: var(--lm-fg-dim);
+  font-style: italic;
+  border-left: 2px solid var(--vscode-widget-border, transparent);
+  padding-left: 8px;
+}
+/* A2 (ADR 0021): the compaction checkpoint card — dimmed like a notice, but
+   expanded, because the summary IS the model's memory from here on. */
+.lm-msg-compaction {
+  align-self: stretch;
+  background: var(--lm-bg-panel);
+  border: 1px solid var(--vscode-widget-border, transparent);
+  border-left: 2px solid var(--lm-fg-dim);
+  border-radius: var(--lm-radius-card);
+  padding: 8px 10px;
+  color: var(--lm-fg-dim);
+}
+.lm-compaction__summary {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  padding-top: 4px;
+}
+/* A1b: the edit-proposal card, its per-edit rows, and approval controls. */
+.lm-msg-proposal,
+.lm-msg-changed {
+  align-self: stretch;
+  background: var(--lm-bg-panel);
+  border: 1px solid var(--vscode-widget-border, transparent);
+  border-radius: var(--lm-radius-card);
+  padding: 8px 10px;
+}
+.lm-proposal__row {
+  line-height: 1.5;
+  padding: 2px 0;
+}
+.lm-proposal--applied {
+  color: var(--lm-green);
+}
+.lm-proposal--rejected,
+.lm-proposal--invalid {
+  color: var(--lm-red);
+}
+.lm-proposal--stale {
+  color: var(--lm-fg-faint);
+}
+.lm-proposal__controls {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 6px;
+  flex-wrap: wrap;
+}
+.lm-proposal__reject {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0;
+}
+.lm-proposal__note {
+  flex: 1;
+}
+.lm-proposal__decided {
+  color: var(--lm-fg-dim);
+  font-size: 0.9em;
+}
+/* Per-edit reason under a grouped file row (why one edit failed). */
+.lm-proposal__note-line {
+  color: var(--lm-fg-faint);
+  font-size: 0.9em;
+  padding-left: 14px;
+}
+.lm-proposal__all {
+  margin-top: 4px;
+}
+/* D2 (CHAT-5): the batch this decided file is still waiting on. */
+.lm-proposal__waiting {
+  color: var(--lm-fg-faint);
+  font-size: 0.9em;
+}
+/* D2 (X2's T6): the declared-removal line under a proposal row. */
+.lm-proposal__removes {
+  color: var(--vscode-editorWarning-foreground, var(--lm-fg));
+}
+.lm-script__warn {
+  color: var(--vscode-editorWarning-foreground, var(--lm-fg));
+}
+/* D2 (CHAT-4): a script's stderr, inside the output fold. `.lm-script__out`
+   itself no longer needs a rule — the fold reuses `.lm-tool__raw`, which is
+   where the wrap, the height bound and the scroll live. */
+.lm-script__err {
+  color: var(--vscode-editorError-foreground, var(--lm-fg));
+}
+/* The approval-time source preview is NOT folded (it is what is being
+   approved), so it keeps a rule of its own. */
+.lm-script__src {
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--lm-panel);
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.lm-changed__row {
+  line-height: 1.5;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.92em;
+}
+.lm-pill__dot--review {
+  background: var(--lm-amber);
+}
+
+/* ---- The brand mark and the working ring (P1, ADR 0072) ------------ */
+/* The artwork is built as DOM nodes in `parts/brand.ts` — the webview's CSP is
+   `default-src 'none'` with no `img-src`, and the innerHTML guard is
+   deny-by-default over that tree. What lives here is everything the nodes
+   deliberately do NOT carry: the colours (so one set of nodes serves every
+   theme) and the animation (so the CSP's lack of 'unsafe-inline' cannot
+   silently drop it, which an in-SVG <style> block would). */
+
+.lm-brand-stop--bottom-0 {
+  stop-color: var(--lm-brand-bottom-0);
+}
+.lm-brand-stop--bottom-1 {
+  stop-color: var(--lm-brand-bottom-1);
+}
+.lm-brand-stop--middle-0 {
+  stop-color: var(--lm-brand-middle-0);
+}
+.lm-brand-stop--middle-1 {
+  stop-color: var(--lm-brand-middle-1);
+}
+.lm-brand-stop--top-0 {
+  stop-color: var(--lm-brand-top-0);
+}
+.lm-brand-stop--top-1 {
+  stop-color: var(--lm-brand-top-1);
+}
+.lm-brand-stop--overlap-lower-0 {
+  stop-color: var(--lm-brand-overlap-lower-0);
+}
+.lm-brand-stop--overlap-lower-1 {
+  stop-color: var(--lm-brand-overlap-lower-1);
+}
+.lm-brand-stop--overlap-upper-0 {
+  stop-color: var(--lm-brand-overlap-upper-0);
+}
+.lm-brand-stop--overlap-upper-1 {
+  stop-color: var(--lm-brand-overlap-upper-1);
+}
+
+.lm-brand-mark {
+  display: block;
+  flex: none;
+}
+
+/* The compact indicator. 16px in the transcript row: the pack specifies this
+   variant for inline activity and says to use it "when motion must be legible
+   at 16 px", and warns against a second large animated mark in the same panel.
+   `currentColor` is what makes it read as part of the dim row rather than as a
+   brand badge stamped on every theme. */
+.lm-brand-ring {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: inherit;
+}
+.lm-brand-ring__arc {
+  transform-origin: 12px 12px;
+  animation: lm-brand-ring-spin 1200ms linear infinite;
+}
+@keyframes lm-brand-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Reduced motion is already handled, once, by the global
+   `* { animation: none !important }` block above — the arc then stands still as
+   a partial ring, which is the pack's own static companion. Nothing is repeated
+   here; `test-webview/brand.test.ts` asserts that coverage rather than a
+   duplicate rule, so there is only one place to change it. */
+
+/* The empty Assistant panel — the pack's "empty webview" placement. It ships a
+   320x180 illustration that is itself the 96px mark on a frame, so with the
+   mark as nodes the frame is these rules and the file is not needed. Static by
+   the pack's own direction: waiting for a human is not computation. */
+.lm-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--lm-fg-dim);
+}
+.lm-welcome__title {
+  color: var(--lm-fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+.lm-welcome__body {
+  font-size: 12px;
+  line-height: 1.55;
+  max-width: 34ch;
+}
+
+/* The pack's `pop` variant — the working row's graphic since 2026-09-13
+   (operator direction; ADR 0073). Three pebbles arrive bottom-to-top at 168 ms
+   intervals, each overshooting slightly and settling; the assembled mark holds,
+   then fades to restart the 2400 ms loop.
+
+   Timing, easing and the three transform origins are transcribed from the
+   pack's `animations/svg/lemmaria-pop-dark.svg`, whose own copy lives in an
+   in-SVG `<style>` element that this webview's CSP drops — see
+   `parts/brand.ts`. `test-webview/brand.test.ts` pins them against that file.
+
+   NOTHING HERE SETS A BASE TRANSFORM OR OPACITY, deliberately. The 0% keyframe
+   is "small, low and invisible"; were that also the base style, `animation:
+   none` — the global reduced-motion rule, and the high-contrast rule below —
+   would land on an invisible mark instead of the assembled logo. */
+.lm-brand-pop {
+  flex: none;
+}
+.lm-pop-bottom-shape {
+  transform-origin: 472px 695px;
+  animation: lm-pop-bottom-shape 2400ms linear infinite;
+}
+.lm-pop-middle-shape {
+  transform-origin: 453px 473px;
+  animation: lm-pop-middle-shape 2400ms linear infinite;
+}
+.lm-pop-top-shape {
+  transform-origin: 533px 251px;
+  animation: lm-pop-top-shape 2400ms linear infinite;
+}
+.lm-pop-bottom-fade {
+  animation: lm-pop-bottom-fade 2400ms linear infinite;
+}
+.lm-pop-middle-fade {
+  animation: lm-pop-middle-fade 2400ms linear infinite;
+}
+.lm-pop-top-fade {
+  animation: lm-pop-top-fade 2400ms linear infinite;
+}
+@keyframes lm-pop-bottom-shape {
+  0% {
+    transform: translateY(68px) scale(0.68);
+    animation-timing-function: cubic-bezier(0.18, 0.78, 0.24, 1);
+  }
+  15% {
+    transform: translateY(-8px) scale(1.025);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  22%,
+  82% {
+    transform: translateY(0) scale(1);
+    animation-timing-function: ease-in;
+  }
+  94%,
+  100% {
+    transform: translateY(18px) scale(0.96);
+  }
+}
+@keyframes lm-pop-middle-shape {
+  0%,
+  7% {
+    transform: translateY(68px) scale(0.68);
+    animation-timing-function: cubic-bezier(0.18, 0.78, 0.24, 1);
+  }
+  22% {
+    transform: translateY(-8px) scale(1.025);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  29%,
+  82% {
+    transform: translateY(0) scale(1);
+    animation-timing-function: ease-in;
+  }
+  94%,
+  100% {
+    transform: translateY(18px) scale(0.96);
+  }
+}
+@keyframes lm-pop-top-shape {
+  0%,
+  14% {
+    transform: translateY(68px) scale(0.68);
+    animation-timing-function: cubic-bezier(0.18, 0.78, 0.24, 1);
+  }
+  29% {
+    transform: translateY(-8px) scale(1.025);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  36%,
+  82% {
+    transform: translateY(0) scale(1);
+    animation-timing-function: ease-in;
+  }
+  94%,
+  100% {
+    transform: translateY(18px) scale(0.96);
+  }
+}
+@keyframes lm-pop-bottom-fade {
+  0% {
+    opacity: 0;
+    animation-timing-function: ease-out;
+  }
+  7%,
+  82% {
+    opacity: 1;
+    animation-timing-function: ease-in;
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes lm-pop-middle-fade {
+  0%,
+  7% {
+    opacity: 0;
+    animation-timing-function: ease-out;
+  }
+  14%,
+  82% {
+    opacity: 1;
+    animation-timing-function: ease-in;
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes lm-pop-top-fade {
+  0%,
+  14% {
+    opacity: 0;
+    animation-timing-function: ease-out;
+  }
+  21%,
+  82% {
+    opacity: 1;
+    animation-timing-function: ease-in;
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The pack's own direction for `pop`: "a static monochrome mark in
+   high-contrast mode, with the same status label". The monochrome half is
+   already done by the `currentColor` tokens at the top of this file; this is
+   the static half. It lands on the assembled logo for the reason in the block
+   comment above, and the row's `role="status"` label is untouched. */
+body.vscode-high-contrast .lm-brand-pop *,
+body.vscode-high-contrast-light .lm-brand-pop * {
+  animation: none !important;
+}
+
+/* The small-size glyph: masked, single-colour, follows the surrounding text.
+   `brandMark`'s gradients merge into a blob below ~32 px, so the brand at 14–24
+   px is this different construction rather than a smaller copy — the same
+   geometry that ships as `media/lemmaria/activity-bar.svg`. */
+.lm-brand-glyph {
+  flex: none;
+  display: block;
+}
+
+/* V2 (ADR 0078 §D12): a paper evidence's title.
+   ADR 0077 §4's rule — a line that opens something says so — so the link takes
+   the counter row's affordance for the counter row's reason: it stays dim,
+   because prior work is context rather than an alarm, and the dotted underline
+   plus the glyph are what separate an openable title from the plain one an
+   index gave no usable URL for. A `span.lm-review-paper` gets neither, which
+   is the point: nothing promises an open that cannot happen. */
+a.lm-review-paper {
+  color: var(--lm-fg-dim);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+a.lm-review-paper::before {
+  content: "↗ ";
+}
+a.lm-review-paper:hover {
+  text-decoration: underline solid;
+}
+body.vscode-high-contrast a.lm-review-paper,
+body.vscode-high-contrast-light a.lm-review-paper {
+  color: currentColor;
+}
+
+/* ---- V6 — the scorecard (ADR 0088 §3–§5) ---------------------------------
+   The card the host derived, drawn as rows under a readiness word. The nodes
+   carry classes only (ADR 0072 §1): no style attribute, which the CSP would
+   drop, and no image. Nothing animates, so reduced motion has nothing to stop.
+   Every line a reader reads is dim, never faint: `--lm-fg-faint` is the
+   disabled token (X6's round measured it at about 2.2 : 1). */
+.lm-scorecard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 6px 0 10px;
+  padding: 8px 8px 6px;
+  border: 1px solid var(--lm-border);
+  border-radius: 8px;
+  font-size: 11px;
+}
+.lm-sc-readiness {
+  font-size: 12px;
+  color: var(--lm-fg-dim);
+}
+.lm-sc-readiness__word {
+  font-weight: 600;
+  color: var(--lm-fg);
+}
+.lm-sc-legend,
+.lm-sc-compare,
+.lm-sc-unmeasured {
+  color: var(--lm-fg-dim);
+  word-break: break-word;
+}
+.lm-sc-rows {
+  display: flex;
+  flex-direction: column;
+  margin-top: 3px;
+}
+/* A row is a toggle button reset like the tab's other buttons. Its head —
+   the dimension, its track, and its level word with the delta in it — then, after a
+   forced break, its dim lines: the counts (or why it was not assessed) with
+   each seat's level, then the impression line. A wrapping flow rather than a
+   grid: the V6 Chromium check measured a four-column grid at a real sidebar
+   width squeezing the level word to a word a line (rows 98–128 px tall, the
+   block 1025 px), where a flow moves an item whole onto the next line. */
+.lm-sc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  row-gap: 1px;
+  width: 100%;
+  padding: 3px 4px 3px 6px;
+  font: inherit;
+  line-height: 1.35;
+  color: inherit;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: none;
+  text-align: left;
+}
+button.lm-sc-row {
+  cursor: pointer;
+}
+button.lm-sc-row:hover {
+  background: var(--lm-accent-soft);
+}
+.lm-sc-row[aria-pressed="true"] {
+  border-left: 2px solid var(--lm-accent);
+  background: var(--lm-accent-soft);
+}
+/* The break between the head and the dim lines. */
+.lm-sc-row::after {
+  content: "";
+  flex-basis: 100%;
+  order: 1;
+}
+/* A fixed width, so the eight tracks line up in one column. */
+.lm-sc-row__dim {
+  flex: 0 0 6em;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--lm-fg);
+}
+.lm-sc-row__level {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--lm-fg);
+  word-break: break-word;
+}
+.lm-sc-mark {
+  color: var(--lm-fg-dim);
+}
+.lm-sc-row__counts,
+.lm-sc-row__reason {
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--lm-fg-dim);
+  word-break: break-word;
+}
+.lm-sc-row__reason {
+  flex-basis: 100%;
+}
+.lm-sc-row__note {
+  display: block;
+}
+.lm-sc-row__seats {
+  order: 2;
+  flex: none;
+  margin-left: auto;
+  color: var(--lm-fg-dim);
+}
+.lm-sc-row__impression {
+  order: 2;
+  flex: 1 1 100%;
+  font-size: 0.9em;
+  color: var(--lm-fg-dim);
+}
+/* The track: four steps, the level's count filled. The count IS the level —
+   colour is a hint on the class, so the row reads with no colour at all. */
+.lm-sc-track {
+  display: inline-flex;
+  flex: none;
+  align-self: center;
+  gap: 2px;
+}
+.lm-sc-step {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--lm-fg-dim);
+  border-radius: 2px;
+}
+.lm-sc-step--off {
+  background: transparent;
+}
+/* Not assessed is never a level: hatched, never filled. */
+.lm-sc-step--na {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--lm-fg-dim) 0 1px,
+    transparent 1px 3px
+  );
+}
+.lm-sc-track--l1 .lm-sc-step--on,
+.lm-sc-track--l2 .lm-sc-step--on {
+  background: var(--lm-red);
+  border-color: var(--lm-red);
+}
+.lm-sc-track--l3 .lm-sc-step--on {
+  background: var(--lm-amber);
+  border-color: var(--lm-amber);
+}
+.lm-sc-track--l4 .lm-sc-step--on {
+  background: var(--lm-green);
+  border-color: var(--lm-green);
+}
+/* The delta: a glyph the eye reads, its word on `aria-label`. It sits inside
+   the level's cell, after its words — never pushed to the row's far edge,
+   where it read as a column of its own and, at ~280 px, landed alone on a
+   line (V6's E1 round). 12 px, because at 10 px an `=` was a speck. */
+.lm-sc-row__delta {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--lm-fg-dim);
+}
+/* `new` is a word, read at the size of the words around it. */
+.lm-sc-delta--new {
+  font-size: inherit;
+}
+.lm-sc-delta--up {
+  color: var(--lm-green);
+}
+.lm-sc-delta--down {
+  color: var(--lm-red);
+}
+.lm-sc-narrow {
+  margin-top: 4px;
+  color: var(--lm-fg-dim);
+  word-break: break-word;
+}
+.lm-sc-narrow__all {
+  font: inherit;
+  padding: 0 6px;
+  border-radius: 5px;
+  border: 1px solid var(--lm-border);
+  background: transparent;
+  color: var(--lm-fg-dim);
+  cursor: pointer;
+}
+.lm-sc-narrow__all:hover {
+  color: var(--lm-fg);
+  border-color: var(--lm-accent);
+}
+/* The stage principle in one line, always visible: not a fold, not a
+   tooltip, not a footnote. */
+.lm-sc-caveat {
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: var(--lm-fg-dim);
+  word-break: break-word;
+}
+/* High contrast: the track, the hatch and the delta collapse to the theme's
+   foreground, as the brand marks and `.lm-review-counter` do. Each selector
+   outranks the level rule it overrides. */
+body.vscode-high-contrast .lm-sc-step,
+body.vscode-high-contrast-light .lm-sc-step {
+  border-color: currentColor;
+}
+body.vscode-high-contrast .lm-sc-step--on,
+body.vscode-high-contrast-light .lm-sc-step--on {
+  background: currentColor;
+}
+body.vscode-high-contrast .lm-sc-step--na,
+body.vscode-high-contrast-light .lm-sc-step--na {
+  background: repeating-linear-gradient(
+    45deg,
+    currentColor 0 1px,
+    transparent 1px 3px
+  );
+}
+body.vscode-high-contrast .lm-sc-row__delta,
+body.vscode-high-contrast-light .lm-sc-row__delta {
+  color: currentColor;
+}

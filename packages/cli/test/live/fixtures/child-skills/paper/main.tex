@@ -1,0 +1,22 @@
+\documentclass{article}
+\begin{document}
+
+\begin{abstract}
+Retrieval-augmented generation grounds a language model in retrieved evidence.
+We report a system that retrieves passages from a domain corpus and conditions
+generation on them, and we find that it reduces unsupported claims relative to
+an unretrieved baseline. Our evaluation uses a single held-out set of 400
+questions and reports exact-match accuracy only.
+\end{abstract}
+
+\section{Introduction}
+Language models produce fluent text that is not always supported by any source.
+Retrieval-augmented generation addresses this by conditioning generation on
+passages fetched at inference time, so that a claim can in principle be traced
+to a document. Prior work establishes the architecture; what remains unclear is
+how much of the observed gain comes from retrieval itself rather than from the
+longer context it supplies. We hold context length fixed and vary only whether
+the passages are retrieved or sampled at random. The remainder of this paper
+describes the corpus, the retriever, and the evaluation protocol.
+
+\end{document}

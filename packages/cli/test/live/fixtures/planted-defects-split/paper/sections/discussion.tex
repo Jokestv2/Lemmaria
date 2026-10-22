@@ -1,0 +1,16 @@
+\section{Discussion}\label{sec:discussion}
+
+Fixing bandwidth and learning the pattern is, in our reading, the trade that
+practitioners actually want. A fixed pattern gives a predictable bill and an
+unpredictable failure mode; a learned pattern with a free bandwidth gives the
+reverse. Corridor Attention makes the bill predictable and moves the learned
+degree of freedom to where it costs nothing at inference time.
+
+Two limitations are worth stating plainly. First, the router is trained with a
+straight-through estimator, and although we observe stable training across all
+the scales we tried, we have no guarantee that this continues to hold at
+larger widths. Second, a fixed bandwidth is by construction the wrong choice
+for inputs whose genuine dependency structure is heavy-tailed; for those, a
+method that can spend more on a few queries would be preferable, at the cost of
+the predictability we set out to obtain.
+

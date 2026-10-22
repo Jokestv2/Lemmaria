@@ -1,0 +1,462 @@
+% Corridor Attention --- a complete draft. Hard-wrapped at 80 columns.
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{amsthm}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\usepackage{hyperref}
+
+\title{Corridor Attention: Bounded-Bandwidth Routing for Long-Context
+Sequence Models}
+\author{A.~Fixture \and B.~Fixture}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Transformer language models spend a quadratic share of their compute on
+attention, which puts a hard practical ceiling on the context lengths that are
+affordable to train. We introduce \emph{Corridor Attention}, a routing scheme
+that gives every query token a fixed bandwidth of $k$ key positions drawn from
+a learned, block-level corridor rather than from the full prefix. Corridor
+Attention keeps a dense local window for short-range syntax, adds a small set
+of globally visible summary tokens for discourse-level dependencies, and routes
+the remaining bandwidth through a differentiable block scorer that is trained
+jointly with the rest of the network. The result is an attention layer whose
+cost is linear in sequence length with a constant that the practitioner sets
+directly. We describe the method, characterise its cost, and evaluate it on
+long-context language modelling and on retrieval-style probes.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+
+Self-attention \citep{vaswani2017attention} computes an interaction between
+every pair of positions in a sequence. That property is the reason
+transformers model long-range structure well, and it is also the reason their
+cost grows as $\Theta(n^2)$ in the sequence length $n$. For the context
+lengths that are now routinely requested of production models --- tens of
+thousands of tokens of source code, a whole scientific article and its
+appendices, a multi-day conversation --- the attention term stops being a
+constant factor and starts being the budget.
+
+The literature has answered this in two broadly different ways. One family
+\emph{restricts} the interaction pattern: sliding windows, dilated windows,
+strided or block-sparse masks, and hand-designed combinations of the three
+\citep{child2019sparse,beltagy2020longformer,zaheer2020bigbird}. These methods
+are cheap and predictable, but the pattern is fixed before the model sees any
+data, so a dependency the designer did not anticipate simply cannot be
+expressed. The other family \emph{approximates} the softmax kernel, replacing
+the exact attention matrix with a low-rank or feature-map surrogate
+\citep{wang2020linformer,katharopoulos2020linear,choromanski2021performer}.
+These methods keep a formally global receptive field, but the approximation
+error is not under the practitioner's control and it interacts badly with the
+sharply peaked attention distributions that emerge late in training.
+
+We take a third position, which we think is the pragmatic one: keep attention
+\emph{exact}, and make the \emph{choice of what to attend to} learned. Each
+query is allocated a fixed bandwidth --- a corridor --- of $k$ key positions.
+A lightweight scorer, operating on block summaries rather than on individual
+positions, decides which blocks the corridor passes through. Because the
+bandwidth is a hyperparameter rather than an emergent property, the cost of the
+layer is known before training starts, and because the routing is learned, the
+pattern can differ per head, per layer, and per input.
+
+Three design commitments follow from this position, and they are what
+distinguishes Corridor Attention from the closest prior work.
+
+\paragraph{Bandwidth is declared, not discovered.} The practitioner sets $k$.
+The model may not exceed it, and the training objective contains no term that
+trades accuracy against cost --- there is nothing to trade, because the cost is
+fixed. This makes capacity planning a matter of arithmetic rather than of
+empirical scaling curves.
+
+\paragraph{Routing is scored on blocks, decided per query.} Scoring every
+candidate key position would reintroduce the quadratic term we are trying to
+remove. Corridor Attention scores $\lceil n / b \rceil$ block summaries
+instead, at a cost of $\Theta(n^2 / b^2)$ for the scorer, which for the block
+sizes we use is a small fraction of the total. The selection itself is
+per-query, so two queries in the same block may route differently.
+
+\paragraph{The local window is not negotiable.} Ablating the dense local
+window degrades perplexity far more than ablating any equivalent amount of
+routed bandwidth. We therefore treat the window as part of the architecture
+rather than as one option among several, and we spend the learned bandwidth
+only on what the window cannot reach.
+
+Our contributions are as follows. (i) We formalise bounded-bandwidth routed
+attention and give a block-scored, per-query instantiation of it that trains
+end to end without an auxiliary load-balancing loss. (ii) We give a cost model
+for the layer and validate it against measured wall-clock time, showing that
+the predicted and observed crossover points against dense attention agree
+closely. (iii) We evaluate on long-context language modelling and on synthetic
+retrieval probes, and we report the ablations that identify which of the three
+components each benefit comes from.
+
+\section{Background and Notation}\label{sec:background}
+
+Let $X \in \mathbb{R}^{n \times d}$ be the input to an attention layer, with
+$n$ positions and model width $d$. A single head projects $X$ into queries,
+keys and values, $Q = XW_Q$, $K = XW_K$, $V = XW_V$, with
+$W_Q, W_K, W_V \in \mathbb{R}^{d \times d_h}$, and computes
+\begin{equation}\label{eq:dense}
+  \mathrm{Attn}(Q, K, V) = \mathrm{softmax}\!\left(
+    \frac{QK^{\top}}{\sqrt{d_h}} + M \right) V,
+\end{equation}
+where $M \in \{0, -\infty\}^{n \times n}$ is the causal mask. Equation
+\eqref{eq:dense} requires $\Theta(n^2 d_h)$ multiply--accumulates and, in a
+naive implementation, $\Theta(n^2)$ memory; fused kernels
+\citep{dao2022flashattention} remove the memory term but not the compute term.
+
+A \emph{sparse} attention layer replaces $M$ with a mask $M_S$ whose finite
+entries are indexed by a set $S \subseteq \{1,\dots,n\}^2$ of permitted
+query--key pairs. We call $|S_i| = |\{j : (i,j) \in S\}|$ the
+\emph{bandwidth} of query $i$. Fixed-pattern methods choose $S$ in advance.
+Corridor Attention chooses $S$ as a function of the input, subject to
+$|S_i| \le k$ for a constant $k$ set by the practitioner.
+
+We write $b$ for the block size used by the router, $m = \lceil n/b \rceil$ for
+the number of blocks, $w$ for the width of the dense local window, and $g$ for
+the number of global summary tokens. Throughout, \emph{bandwidth} refers to
+$k = w + g + r$, where $r$ is the routed bandwidth.
+
+\section{Related Work}\label{sec:related}
+
+\paragraph{Fixed sparse patterns.} Sparse Transformer
+\citep{child2019sparse} introduced strided and fixed factorised patterns.
+Longformer \citep{beltagy2020longformer} combined a sliding window with
+task-specific global tokens, and BigBird \citep{zaheer2020bigbird} added
+random attention and gave the resulting pattern a theoretical justification.
+All three fix the pattern before training. Our local window and global summary
+tokens are drawn directly from this line of work; the routed component is what
+we add to it.
+
+\paragraph{Kernel and low-rank approximations.} Linformer
+\citep{wang2020linformer} projects keys and values to a fixed rank. Linear
+attention \citep{katharopoulos2020linear} and Performer
+\citep{choromanski2021performer} replace the softmax with a feature map,
+recovering linear cost and a recurrent formulation. These methods approximate
+the attention matrix; Corridor Attention computes an exact softmax over a
+restricted support, which we prefer because the error is then structural and
+inspectable rather than distributional.
+
+\paragraph{Learned and content-based routing.} Routing Transformer
+\citep{roy2021efficient} clusters queries and keys with online $k$-means and
+attends within clusters. Reformer \citep{kitaev2020reformer} uses
+locality-sensitive hashing to the same end. Both make the \emph{grouping}
+content-dependent but leave each query's bandwidth as a consequence of cluster
+occupancy, which is why both need balancing machinery. Corridor Attention fixes
+the bandwidth per query and lets the routing vary, which we argue is the more
+useful of the two invariants to hold fixed.
+
+\paragraph{Retrieval-augmented and memory models.} A separate line of work
+keeps long context outside the attention layer entirely, in a retrieval index
+or a compressed memory \citep{rae2020compressive,borgeaud2022improving}. These
+are complementary to our method rather than alternatives to it: Corridor
+Attention is what we would use \emph{inside} such a model to read a long
+retrieved passage.
+
+\section{Method}\label{sec:method}
+
+\subsection{Overview}\label{sec:overview}
+
+Corridor Attention keeps Equation~\eqref{eq:dense} exactly as it is and
+changes only the mask. For query $i$ the permitted key set is the union of
+three parts,
+\begin{equation}\label{eq:support}
+  S_i = W_i \cup G \cup R_i, \qquad |S_i| \le w + g + r = k,
+\end{equation}
+where $W_i = \{\, j : i - w < j \le i \,\}$ is the dense local window, $G$ is
+the fixed set of $g$ global summary positions, and $R_i$ is the routed
+corridor chosen by the scorer of Section~\ref{sec:scorer}. The mask $M_S$ has
+a finite entry exactly on $S_i$, and the layer computes the softmax of
+Equation~\eqref{eq:dense} over that support and nothing else.
+
+\subsection{Block summaries}\label{sec:summaries}
+
+The router never looks at individual key positions. The sequence is cut into
+$m = \lceil n/b \rceil$ blocks of $b$ consecutive positions, and block $j$ is
+represented by the mean of its keys,
+\begin{equation}\label{eq:summary}
+  s_j = \frac{1}{b} \sum_{t=(j-1)b+1}^{jb} K_t ,
+\end{equation}
+computed once per layer and head. Mean-pooling is sufficient because the
+scorer only has to rank blocks, not reconstruct them: a block whose keys are
+on average aligned with a query is the block that contains the individual
+keys that are, and the exact softmax over the selected block then does the
+fine-grained weighting that the summary cannot.
+
+\subsection{The corridor scorer}\label{sec:scorer}
+
+Queries are pooled the same way, $\bar{q}_I$ being the mean query of block
+$I$. The scorer assigns every pair of a query block $I$ and a key block
+$j \le I$ the score
+\begin{equation}\label{eq:score}
+  \sigma_{Ij} = \frac{\bar{q}_I \cdot s_j}{\sqrt{d_h}} ,
+\end{equation}
+which costs $m^2 d_h$ multiply--accumulates per layer and head, that is
+$\Theta(n^2 d_h / b^2)$, the term quoted in Section~\ref{sec:intro}. Each
+query $i$ in block $I$ then re-scores the $2\rho$ highest-scoring key blocks
+of its own block against its own $q_i$ and keeps the top $\rho = r/b$ of
+them; $R_i$ is the set of all positions in those $\rho$ blocks, so
+$|R_i| = \rho b = r$ for every $i$. The re-scoring costs $2\rho d_h$ per
+query and is what makes the selection per-query while the scoring stays
+per-block. We require $r$ to be a multiple of $b$ throughout.
+
+Every block selected for query $i$ has index $j \le I = \lceil i/b \rceil$,
+and inside block $I$ itself the causal mask $M$ of Equation~\eqref{eq:dense}
+removes the positions $t > i$; so no selected key lies in the future of its
+query.
+
+\subsection{Training the discrete selection}\label{sec:training}
+
+The top-$\rho$ selection is not differentiable. We use a straight-through
+estimator: the forward pass uses the hard selection, and the backward pass
+treats the selection as the softmax of the block scores $\sigma_{I\cdot}$
+over the causal blocks, so the scorer receives a gradient whenever the
+selected blocks were useful. No auxiliary load-balancing loss is needed, for
+the reason made precise in Proposition~\ref{prop:cost}.
+
+\begin{lemma}[Exactness]\label{lem:exact}
+For every query $i$ with $S_i \ne \emptyset$, the output of Corridor
+Attention equals the output of Equation~\eqref{eq:dense} with $M$ replaced
+by $M_S$.
+\end{lemma}
+\begin{proof}
+Write $\ell_{ij} = q_i \cdot k_j / \sqrt{d_h}$. For $j \in S_i$ the masked
+logit $\ell_{ij} + (M_S)_{ij}$ equals $\ell_{ij}$; for $j \notin S_i$ it is
+$-\infty$ and its exponential is zero. The normaliser of the masked softmax
+is therefore $\sum_{j \in S_i} \exp \ell_{ij}$, which is the normaliser of
+the softmax over $S_i$, and the two distributions coincide term by term.
+\end{proof}
+
+\begin{proposition}[Cost is independent of routing]\label{prop:cost}
+If $r$ is a multiple of $b$, the number of key positions any query attends
+to is at most $k$, whatever the scorer chooses.
+\end{proposition}
+\begin{proof}
+By construction every query keeps exactly $\rho = r/b$ blocks, so
+$|R_i| = \rho b = r$ for every $i$; with $|W_i| \le w$ and $|G| = g$,
+Equation~\eqref{eq:support} gives $|S_i| \le k$. Nothing in the bound
+depends on which blocks were chosen.
+\end{proof}
+
+\subsection{Cost model}\label{sec:cost}
+
+Per token and per head, dense attention spends
+$C_{\mathrm{dense}}(n) = 4 n d_h$ multiply--accumulates: $2 n d_h$ for the
+scores and $2 n d_h$ for the weighted sum. Corridor Attention spends
+\begin{equation}\label{eq:cost}
+  C_{\mathrm{corr}}(n) = 4 k d_h + \frac{2 n d_h}{b^{2}} ,
+\end{equation}
+the first term for the attention over the $k$ permitted keys and the second
+for this token's share of the block scorer. Setting the two equal and
+solving for $n$ gives the predicted crossover
+\begin{equation}\label{eq:crossover}
+  n^{*} = \frac{2 k b^{2}}{2 b^{2} - 1} ,
+\end{equation}
+above which Corridor Attention is cheaper. At $b = 64$ and $k = 512$ this is
+$n^{*} \approx 512.06$: the corridor pays off as soon as the context is
+longer than the bandwidth. The scorer's term is smaller than the attention
+term for every $n < 2 k b^{2}$, which at the settings of
+Section~\ref{sec:setup} is about four million tokens, so for every such $n$
+the whole layer costs at most twice its linear term $4 n k d_h$. Memory is
+$\Theta(nk)$ for the attention scores against the $\Theta(n^2)$ of a naive
+dense implementation, and the $m^2$ block scores are negligible at the block
+sizes we use.
+
+\subsection{Implementation}\label{sec:impl}
+
+The routed corridor is gathered with a block-sparse kernel that copies the
+candidate key and value blocks of each query block into a contiguous buffer,
+runs a dense attention over the buffer, and scatters the result back. The
+per-query choice of $\rho$ blocks among the $2\rho$ candidates is applied as
+a mask inside the buffer, so the gather is shared by a query block while the
+selection stays per-query. Block summaries are recomputed at every layer
+from that layer's keys and queries. The local window and the global
+summaries use the fused kernel of \citet{dao2022flashattention} unchanged.
+
+\section{Experiments}\label{sec:experiments}
+
+\subsection{Setup}\label{sec:setup}
+
+We train decoder-only language models of 125M and 350M parameters on two
+corpora: a 4-billion-token corpus of long-form English text and a
+2-billion-token corpus of permissively licensed Python source, tokenised
+with a 32k-entry vocabulary. Every model is trained at context lengths of
+2k, 8k and 32k tokens. Unless stated otherwise the corridor uses block size
+$b = 64$, a local window of $w = 112$, $g = 16$ global summary tokens and a
+routed bandwidth of $r = 384$ (six blocks of $b = 64$), so that
+$k = w + g + r = 112 + 16 + 384 = 512$.
+
+The baselines are dense attention; a sliding window of width 512; a
+Longformer-style window with 16 global tokens \citep{beltagy2020longformer};
+a BigBird-style pattern with window, global and random blocks
+\citep{zaheer2020bigbird}; Linformer at projected rank 256
+\citep{wang2020linformer}; Performer with 256 random features
+\citep{choromanski2021performer}; and Routing Transformer with 8 clusters
+\citep{roy2021efficient}. Every baseline is trained with the same optimiser,
+schedule and token budget as our model, and the sparse baselines are set so
+that each query sees at most 512 keys, matching $k$.
+
+All models use AdamW with a peak learning rate of $3 \times 10^{-4}$, a
+cosine schedule with 2k warm-up steps, 100k steps at 0.5M tokens per step,
+and 8 accelerators per run. We train three seeds of every configuration and
+report the mean; the spread across seeds is $\pm 0.1$ perplexity, so we
+treat differences of more than $0.2$ as outside seed noise, and where a
+comparison is close we report a paired $t$-test over the three seeds.
+
+\subsection{Main results}\label{sec:main}
+
+Table~\ref{tab:main} reports validation perplexity on the text corpus for
+the 350M models at 8k and 32k context, and the wall-clock time of one
+training step at 32k. At 32k Corridor Attention reaches 12.1 against 11.9
+for dense attention and 13.5 for the sliding window: it recovers 88\% of the
+gap between the window and dense attention at a matched training budget,
+for 36\% of the dense step time. Linformer and Performer trail by more than
+two perplexity points, well outside seed noise, and their perplexity worsens
+from 8k to 32k where every exact method improves. Routing Transformer is the
+closest learned-routing baseline at 12.6, at 1.5 times our step time. The
+paired test for the Corridor-versus-BigBird difference at 32k gives
+$p = 0.03$, so we read the 0.6-point gap as real.
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{lrrr}
+    \toprule
+    Model & PPL @ 8k & PPL @ 32k & ms / step @ 32k \\
+    \midrule
+    Dense attention           & 12.4 & 11.9 & 1840 \\
+    Sliding window (512)      & 13.6 & 13.5 &  610 \\
+    Longformer-style          & 13.1 & 12.9 &  640 \\
+    BigBird-style             & 13.0 & 12.7 &  690 \\
+    Linformer (rank 256)      & 14.2 & 14.8 &  520 \\
+    Performer (256 features)  & 14.0 & 14.4 &  560 \\
+    Routing Transformer       & 12.9 & 12.6 &  980 \\
+    Corridor Attention (ours) & 12.6 & 12.1 &  660 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Validation perplexity of the 350M models on the text corpus, and
+    the wall-clock time of one training step at 32k context; mean of three
+    seeds.}
+  \label{tab:main}
+\end{table}
+
+\subsection{Retrieval probes}\label{sec:probes}
+
+The needle-in-a-haystack probe places a random key--value pair at a
+controlled distance before a query that asks for it, inside otherwise
+unrelated text. Table~\ref{tab:needle} gives accuracy by distance at 32k
+context for the 350M models. Dense attention is near-perfect at every
+distance. The sliding window collapses as soon as the needle leaves its
+window. Corridor Attention degrades gracefully, from 98\% at 4k to 91\% at
+28k. The routed corridor is what carries the long-distance signal: with
+$r = 0$ the accuracy at 28k falls from 91\% to 4\%.
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{lrrr}
+    \toprule
+    Model & 4k & 16k & 28k \\
+    \midrule
+    Dense attention           & 99 & 98 & 97 \\
+    Sliding window (512)      & 97 & 12 &  3 \\
+    Corridor Attention (ours) & 98 & 95 & 91 \\
+    Corridor, $r = 0$         & 97 & 11 &  4 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Needle retrieval accuracy (\%) by distance between the needle and
+    the query, at 32k context.}
+  \label{tab:needle}
+\end{table}
+
+\subsection{Ablations}\label{sec:ablations}
+
+Table~\ref{tab:ablation} removes or freezes one component at a time in the
+350M model at 32k. Ablating the dense local window costs 2.8 perplexity,
+more than ablating the whole routed corridor ($r = 0$, $+1.3$), which is the
+observation behind the third design commitment of Section~\ref{sec:intro}.
+Freezing the router at its initialisation costs 1.1, so the learned routing,
+not merely the extra bandwidth, is what buys the improvement. Halving $r$
+costs 0.4; removing the global summaries costs 0.3. Smaller blocks help a
+little ($b = 32$: 12.0) at a higher step time (780 ms) and larger blocks
+hurt a little ($b = 128$: 12.4); we chose $b = 64$ as the largest block size
+whose perplexity stayed within 0.1 of $b = 32$.
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{lrr}
+    \toprule
+    Configuration & PPL @ 32k & $\Delta$ \\
+    \midrule
+    Corridor Attention (full)     & 12.1 & --     \\
+    No local window ($w = 0$)     & 14.9 & $+2.8$ \\
+    No routed corridor ($r = 0$)  & 13.4 & $+1.3$ \\
+    Router frozen at init         & 13.2 & $+1.1$ \\
+    Half bandwidth ($r = 192$)    & 12.5 & $+0.4$ \\
+    No global summaries ($g = 0$) & 12.4 & $+0.3$ \\
+    Block size $b = 32$           & 12.0 & $-0.1$ \\
+    Block size $b = 128$          & 12.4 & $+0.3$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{Ablations of the 350M model at 32k context.}
+  \label{tab:ablation}
+\end{table}
+
+\subsection{Cost-model validation}\label{sec:validation}
+
+Equation~\eqref{eq:crossover} predicts a crossover at $n^{*} \approx 512$
+tokens for our settings. Measured on the 350M model, dense attention is
+faster below 540 tokens and Corridor Attention above, with a $\pm 30$-token
+uncertainty from timer resolution, so the prediction is within measurement
+error. At 32k, Equation~\eqref{eq:cost} makes the attention layer 63 times
+cheaper than dense attention; attention is 66\% of a dense 350M step at that
+length, so the predicted step-time ratio is $1/(0.34 + 0.66/63) \approx
+2.85\times$, and we measure $2.79\times$ (1840 ms against 660 ms in
+Table~\ref{tab:main}). The residual is the gather and scatter of
+Section~\ref{sec:impl}, which the cost model does not count.
+
+\subsection{Limitations and negative results}\label{sec:limits}
+
+On a synthetic task whose dependency structure is heavy-tailed --- a few
+queries that need hundreds of distant positions and many that need none ---
+Routing Transformer, which lets bandwidth vary per query, beats Corridor
+Attention by 0.6 perplexity at equal average bandwidth. We have not trained
+above 350M parameters, so the stability of the straight-through router at
+larger widths (Section~\ref{sec:discussion}) is untested rather than
+established.
+
+\section{Discussion}\label{sec:discussion}
+
+Fixing bandwidth and learning the pattern is, in our reading, the trade that
+practitioners actually want. A fixed pattern gives a predictable bill and an
+unpredictable failure mode; a learned pattern with a free bandwidth gives the
+reverse. Corridor Attention makes the bill predictable and moves the learned
+degree of freedom to where it costs nothing at inference time.
+
+Two limitations are worth stating plainly. First, the router is trained with a
+straight-through estimator, and although we observe stable training across all
+the scales we tried, we have no guarantee that this continues to hold at
+larger widths. Second, a fixed bandwidth is by construction the wrong choice
+for inputs whose genuine dependency structure is heavy-tailed; for those, a
+method that can spend more on a few queries would be preferable, at the cost of
+the predictability we set out to obtain.
+
+\section{Conclusion}\label{sec:conclusion}
+
+We presented Corridor Attention, an exact-softmax attention layer with a
+declared per-query bandwidth and a learned, block-scored routing of that
+bandwidth. It keeps the cost of long-context attention linear with a constant
+the practitioner chooses, and it recovers most of the quality of dense
+attention on the long-context benchmarks we tested.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

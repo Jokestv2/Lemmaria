@@ -1,0 +1,26 @@
+{
+  "name": "@lemmaria/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:live": "vitest run --config vitest.live.config.ts"
+  },
+  "dependencies": {
+    "@lemmaria/adapters": "workspace:^",
+    "@lemmaria/harness": "workspace:^"
+  },
+  "bin": {
+    "lemmaria": "./bin/lemmaria.mjs"
+  }
+}

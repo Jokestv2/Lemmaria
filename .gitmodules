@@ -1,0 +1,6 @@
+[submodule "Lemmaria-design-doc"]
+	path = Lemmaria-design-doc
+	url = git@github.com:Jokestv2/Lemmaria-design-doc.git
+[submodule "Lemmaria-website"]
+	path = Lemmaria-website
+	url = git@github.com:Jokestv2/Lemmaria-website.git

@@ -1,0 +1,40 @@
+[
+  {
+    "title": "Overview",
+    "file": "main.tex",
+    "startLine": 5,
+    "endLine": 6,
+    "wordCount": 3,
+    "labels": [],
+    "citations": [
+      "alpha2020"
+    ],
+    "children": []
+  },
+  {
+    "title": "Introduction",
+    "file": "sections/intro.tex",
+    "startLine": 1,
+    "endLine": 2,
+    "wordCount": 4,
+    "labels": [
+      "sec:intro"
+    ],
+    "citations": [
+      "beta2021"
+    ],
+    "children": []
+  },
+  {
+    "title": "Method",
+    "file": "sections/method.tex",
+    "startLine": 1,
+    "endLine": 3,
+    "wordCount": 4,
+    "labels": [
+      "sec:method"
+    ],
+    "citations": [],
+    "children": []
+  }
+]

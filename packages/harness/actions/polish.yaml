@@ -1,0 +1,100 @@
+schema_version: "1"
+id: "polish"
+kind: edit
+version: "1.0.0"
+name: { en: "Polish", zh: "润色" }
+description:
+  en: "Improve clarity, flow, and academic tone without changing meaning, claims, or citations."
+  zh: "润色所选文字：提升清晰度、流畅度与学术语气，不改变原意、论断与引用。"
+author: "lemmaria-core"
+license: "SEE LICENSE IN LICENSE.txt"
+tags: [polish]
+icon: "sparkle"
+
+requires:
+  harness: ">=0.0.1"
+  doc_kinds: [latex, markdown]
+
+ui:
+  surfaces: [context_menu, command_palette]
+  group: "edit"
+  requires_selection: false
+
+input:
+  scope: selection
+  scope_fallback: paragraph
+  min_chars: 1
+  max_chars: 20000
+
+routing:
+  level: L0
+  thinking_budget: none
+  max_tokens: 4000
+  timeout_s: 60
+
+model:
+  role: writing
+  temperature: 0.3
+
+context:
+  neighbors: 1
+  include_glossary: true
+  include_profile: [contribution, audience, claims, style]
+  protected_spans: freeze
+
+prompt:
+  system: |
+    You are a careful academic copy-editor working on a {{doc.kind}} document.
+    Improve clarity, concision, flow, and academic tone WITHOUT changing the
+    meaning, claims, structure, or citations. Placeholders like ⟦P0⟧ are frozen
+    content: reproduce each one exactly once, unchanged. Reply with the revised
+    text only — no preamble, no code fences, no commentary.
+    Preserve the layout exactly: keep every blank line between paragraphs, and keep every list item — merging two paragraphs changes the document, not just how it looks.
+  user: |
+    {{#if profile.audience}}This paper is written for:
+    {{profile.audience}}
+
+    {{/if}}{{#if profile.claims}}These are the paper's claims and headline results. Do not weaken, strengthen or invent one:
+    {{profile.claims}}
+
+    {{/if}}{{#if profile.style}}Follow these style rules:
+    {{profile.style}}
+
+    {{/if}}{{#if glossary}}Use these canonical terms exactly:
+    {{glossary}}
+
+    {{/if}}{{#if neighbors.before}}Preceding context (do not rewrite it):
+    {{neighbors.before}}
+
+    {{/if}}Polish the following {{language}} text ({{counts.current}} {{unit}}):
+
+    {{selection}}
+
+output:
+  contract: replace_selection
+  language: same_as_input
+  validators:
+    - { type: protected_spans_intact }
+    - { type: latex_balanced }
+    - { type: no_new_undefined_refs }
+    # D1 (ADR 0032): the shape of the text survives the rewrite. Soft, and
+    # ONE-SIDED — structure must not decrease. A lost blank line merges two
+    # paragraphs, which in LaTeX is a semantic change to the document rather
+    # than a formatting one; gaining a paragraph is not that harm, which is why
+    # the same declaration is correct on expand as on shrink.
+    - { type: layout_preserved, soft: true }
+    # D1 (ADR 0032) resolves the U6 open question by EXTENDING the validator
+    # rather than narrowing the product-design claim. Its EN-casing half is
+    # meaningful for any action that rewrites prose; its translate-only hard
+    # constraint is gated on params.target_language and simply does not fire
+    # here. Soft, unlike translate's — on Translate glossary fidelity IS the
+    # deliverable, here it is a consistency nicety, and a casing nit must never
+    # discard an otherwise good rewrite.
+    - { type: glossary_consistent, soft: true }
+  on_validation_fail:
+    strategy: retry_with_feedback
+    max_retries: 2
+
+review_ui:
+  mode: inline_diff
+  allow_retry_feedback: true

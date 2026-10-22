@@ -1,0 +1,108 @@
+[
+  {
+    "section": "Introduction",
+    "spans": [
+      {
+        "file": "main.tex",
+        "startOffset": 104,
+        "endOffset": 126,
+        "kind": "markup",
+        "token": "⟦P0⟧",
+        "raw": "\\section{Introduction}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 126,
+        "endOffset": 143,
+        "kind": "ref",
+        "token": "⟦P1⟧",
+        "raw": "\\label{sec:intro}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 167,
+        "endOffset": 183,
+        "kind": "cite",
+        "token": "⟦P2⟧",
+        "raw": "\\cite{knuth1984}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 189,
+        "endOffset": 205,
+        "kind": "ref",
+        "token": "⟦P3⟧",
+        "raw": "\\ref{sec:method}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 221,
+        "endOffset": 231,
+        "kind": "macro",
+        "token": "⟦P4⟧",
+        "raw": "\\ourmethod"
+      }
+    ]
+  },
+  {
+    "section": "Method",
+    "spans": [
+      {
+        "file": "main.tex",
+        "startOffset": 234,
+        "endOffset": 250,
+        "kind": "markup",
+        "token": "⟦P0⟧",
+        "raw": "\\section{Method}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 250,
+        "endOffset": 268,
+        "kind": "ref",
+        "token": "⟦P1⟧",
+        "raw": "\\label{sec:method}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 288,
+        "endOffset": 298,
+        "kind": "math",
+        "token": "⟦P2⟧",
+        "raw": "$E = mc^2$"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 307,
+        "endOffset": 370,
+        "kind": "math",
+        "token": "⟦P3⟧",
+        "raw": "\\begin{equation}\\label{eq:loss}\n  L = \\sum_i x_i\n\\end{equation}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 383,
+        "endOffset": 398,
+        "kind": "ref",
+        "token": "⟦P4⟧",
+        "raw": "\\eqref{eq:loss}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 415,
+        "endOffset": 436,
+        "kind": "markup",
+        "token": "⟦P5⟧",
+        "raw": "\\subsection{Training}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 466,
+        "endOffset": 510,
+        "kind": "code",
+        "token": "⟦P6⟧",
+        "raw": "\\begin{verbatim}\nraw $x$ code\n\\end{verbatim}"
+      }
+    ]
+  }
+]

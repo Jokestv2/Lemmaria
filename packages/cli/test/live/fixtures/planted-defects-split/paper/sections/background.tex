@@ -1,0 +1,27 @@
+\section{Background and Notation}\label{sec:background}
+
+Let $X \in \mathbb{R}^{n \times d}$ be the input to an attention layer, with
+$n$ positions and model width $d$. A single head projects $X$ into queries,
+keys and values, $Q = XW_Q$, $K = XW_K$, $V = XW_V$, with
+$W_Q, W_K, W_V \in \mathbb{R}^{d \times d_h}$, and computes
+\begin{equation}\label{eq:dense}
+  \mathrm{Attn}(Q, K, V) = \mathrm{softmax}\!\left(
+    \frac{QK^{\top}}{\sqrt{d_h}} + M \right) V,
+\end{equation}
+where $M \in \{0, -\infty\}^{n \times n}$ is the causal mask. Equation
+\eqref{eq:dense} requires $\Theta(n^2 d_h)$ multiply--accumulates and, in a
+naive implementation, $\Theta(n^2)$ memory; fused kernels
+\citep{dao2022flashattention} remove the memory term but not the compute term.
+
+A \emph{sparse} attention layer replaces $M$ with a mask $M_S$ whose finite
+entries are indexed by a set $S \subseteq \{1,\dots,n\}^2$ of permitted
+query--key pairs. We call $|S_i| = |\{j : (i,j) \in S\}|$ the
+\emph{bandwidth} of query $i$. Fixed-pattern methods choose $S$ in advance.
+Corridor Attention chooses $S$ as a function of the input, subject to
+$|S_i| \le k$ for a constant $k$ set by the practitioner.
+
+We write $b$ for the block size used by the router, $m = \lceil n/b \rceil$ for
+the number of blocks, $w$ for the width of the dense local window, and $g$ for
+the number of global summary tokens. Throughout, \emph{bandwidth} refers to
+$k = w + g + r$, where $r$ is the routed bandwidth.
+

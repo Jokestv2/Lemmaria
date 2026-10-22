@@ -1,0 +1,36 @@
+\section{Related Work}\label{sec:related}
+
+\paragraph{Fixed sparse patterns.} Sparse Transformer
+\citep{child2019sparse} introduced strided and fixed factorised patterns.
+Longformer \citep{beltagy2020longformer} combined a sliding window with
+task-specific global tokens, and BigBird \citep{zaheer2020bigbird} added
+random attention and gave the resulting pattern a theoretical justification.
+All three fix the pattern before training. Our local window and global summary
+tokens are drawn directly from this line of work; the routed component is what
+we add to it.
+
+\paragraph{Kernel and low-rank approximations.} Linformer
+\citep{wang2020linformer} projects keys and values to a fixed rank. Linear
+attention \citep{katharopoulos2020linear} and Performer
+\citep{choromanski2021performer} replace the softmax with a feature map,
+recovering linear cost and a recurrent formulation. These methods approximate
+the attention matrix; Corridor Attention computes an exact softmax over a
+restricted support, which we prefer because the error is then structural and
+inspectable rather than distributional.
+
+\paragraph{Learned and content-based routing.} Routing Transformer
+\citep{roy2021efficient} clusters queries and keys with online $k$-means and
+attends within clusters. Reformer \citep{kitaev2020reformer} uses
+locality-sensitive hashing to the same end. Both make the \emph{grouping}
+content-dependent but leave each query's bandwidth as a consequence of cluster
+occupancy, which is why both need balancing machinery. Corridor Attention fixes
+the bandwidth per query and lets the routing vary, which we argue is the more
+useful of the two invariants to hold fixed.
+
+\paragraph{Retrieval-augmented and memory models.} A separate line of work
+keeps long context outside the attention layer entirely, in a retrieval index
+or a compressed memory \citep{rae2020compressive,borgeaud2022improving}. These
+are complementary to our method rather than alternatives to it: Corridor
+Attention is what we would use \emph{inside} such a model to read a long
+retrieved passage.
+

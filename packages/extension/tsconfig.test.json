@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "out",
+    "types": ["node", "mocha"],
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["test"]
+}

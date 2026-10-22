@@ -1,0 +1,153 @@
+schema_version: "1"
+id: "shrink-to-target"
+kind: edit
+version: "1.0.0"
+name: { en: "Shrink By", zh: "精简字数" }
+description:
+  en: "Compress the selection to a target length, preserving meaning, citations, and LaTeX."
+  zh: "将选区压缩到目标长度，保持原意、引用与 LaTeX 命令完好。"
+author: "lemmaria-core"
+license: "SEE LICENSE IN LICENSE.txt"
+tags: [length, polish]
+icon: "fold"
+
+requires:
+  harness: ">=0.0.1"
+  tools: [count_words]
+  doc_kinds: [latex, markdown]
+
+ui:
+  surfaces: [context_menu, command_palette]
+  group: "edit"
+  requires_selection: false
+
+input:
+  scope: selection
+  scope_fallback: paragraph
+  min_chars: 1
+  max_chars: 20000
+
+routing:
+  level: L1
+  thinking_budget: none
+  tools: [count_words]
+  max_iterations: 3
+  max_tokens: 4000
+  timeout_s: 60
+
+model:
+  role: writing
+  temperature: 0.3
+
+# Delta (`reduce_by`) is the primary input — academics usually think "cut N
+# words", not "reach length L". Absolute `target` stays as an alternative (not
+# prompted in the UI) so callers/tests can still shrink TO a length; word_count
+# prefers reduce_by when both are given. A richer UI to pick either lands later.
+parameters:
+  - id: reduce_by
+    name: { en: "Reduce by how many words", zh: "减少多少字数" }
+    type: integer
+    required: false
+    prompt_on_invoke: true
+    min: 1
+  - id: target
+    name: { en: "Target length", zh: "目标长度" }
+    type: integer
+    required: false
+    min: 1
+  - id: tolerance
+    name: { en: "Tolerance", zh: "容差" }
+    type: number
+    default: 0.05
+    required: false
+
+context:
+  neighbors: 1
+  include_glossary: true
+  include_profile: [contribution, audience, claims, style]
+  protected_spans: freeze
+
+prompt:
+  system: |
+    You are a precise academic copy-editor working on a {{doc.kind}} document.
+    You compress text to a target length WITHOUT changing its meaning, claims,
+    citations, or math. Placeholders like ⟦P0⟧ are frozen content: reproduce each
+    one exactly once, unchanged. You may call count_words to check a candidate's
+    length before answering. Reply with the revised text only — no preamble, no
+    code fences, no commentary.
+    HOW to condense — this is the method, not a suggestion. Compress by
+    REPHRASING: nominalize ("we performed an analysis of" → "we analyzed"),
+    merge clauses, cut hedges ("it is worth noting that", "rather", "quite"),
+    and remove redundancy and restatement. Never reach the target by DELETING
+    content: every claim, qualifier, number, and citation in the original must
+    still be there in the shorter version. If you cannot reach the target
+    without dropping one of those, write the shortest honest version you can
+    and stop — a near miss is acceptable, a lost result is not.
+    Preserve the layout exactly: keep every blank line between paragraphs, and keep every list item — merging two paragraphs changes the document, not just how it looks.
+  user: |
+    {{#if profile.audience}}This paper is written for:
+    {{profile.audience}}
+
+    {{/if}}{{#if profile.claims}}These are the paper's claims and headline results. Do not weaken, strengthen or invent one:
+    {{profile.claims}}
+
+    {{/if}}{{#if glossary}}Use these canonical terms exactly:
+    {{glossary}}
+
+    {{/if}}{{#if params.reduce_by}}Shorten the following {{language}} text by about {{params.reduce_by}} {{unit}} from its current length of {{counts.current}} {{unit}}.{{/if}}{{#unless params.reduce_by}}Shrink the following {{language}} text to about {{params.target}} {{unit}} (current length: {{counts.current}} {{unit}}).{{/unless}} Keep every ⟦Pn⟧ placeholder exactly as-is.
+
+    {{selection}}
+
+output:
+  contract: replace_selection
+  language: same_as_input
+  validators:
+    # Soft: the loop still retries to hit the target, but if it can't, the
+    # closest attempt is proposed (with the miss surfaced as a note) instead of
+    # discarding everything and toasting an error — a length goal is a soft goal.
+    - {
+        type: word_count,
+        reduce_by: "{{params.reduce_by}}",
+        target: "{{params.target}}",
+        tolerance: "{{params.tolerance}}",
+        soft: true,
+      }
+    - { type: protected_spans_intact }
+    - { type: no_new_undefined_refs }
+    # D1 (ADR 0032): the shape of the text survives the rewrite. Soft, and
+    # ONE-SIDED — structure must not decrease. A lost blank line merges two
+    # paragraphs, which in LaTeX is a semantic change to the document rather
+    # than a formatting one; gaining a paragraph is not that harm, which is why
+    # the same declaration is correct on expand as on shrink.
+    - { type: layout_preserved, soft: true }
+    # D1 (ADR 0032) resolves the U6 open question by EXTENDING the validator
+    # rather than narrowing the product-design claim. Its EN-casing half is
+    # meaningful for any action that rewrites prose; its translate-only hard
+    # constraint is gated on params.target_language and simply does not fire
+    # here. Soft, unlike translate's — on Translate glossary fidelity IS the
+    # deliverable, here it is a consistency nicety, and a casing nit must never
+    # discard an otherwise good rewrite.
+    - { type: glossary_consistent, soft: true }
+    # D1 (ADR 0032): guard CONTENT, not length. HARD here, deliberately, and
+    # this is the load-bearing half of EDIT-1 — see the review finding recorded
+    # in the ADR. Soft would have bought nothing: the engine picks the emitted
+    # candidate by SUMMING soft distances, and word_count's distance is in words
+    # while this one counts missing figures, so an attempt that deleted a result
+    # to hit the length would still have beaten an attempt that kept every
+    # figure and missed by eight words. The reported EDIT-1 harm would have
+    # shipped anyway, with a note attached.
+    #
+    # Hard is also the treatment the sibling concern already gets:
+    # protected_spans_intact is hard on all five actions, so a shrink that drops
+    # a CITATION already emits no proposal. A dropped NUMBER is the same kind of
+    # loss. The prompt above tells the model to write the shortest honest
+    # version and stop rather than drop a figure, so a compliant answer always
+    # passes; an answer that cannot is one the user should see fail.
+    - { type: numbers_retained }
+  on_validation_fail:
+    strategy: retry_with_feedback
+    max_retries: 2
+
+review_ui:
+  mode: inline_diff
+  allow_retry_feedback: true

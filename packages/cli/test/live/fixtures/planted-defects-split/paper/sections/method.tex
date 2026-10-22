@@ -1,0 +1,115 @@
+\section{Method}\label{sec:method}
+
+\subsection{Overview}\label{sec:overview}
+
+Corridor Attention keeps Equation~\eqref{eq:dense} exactly as it is and
+changes only the mask. For query $i$ the permitted key set is the union of
+three parts,
+\begin{equation}\label{eq:support}
+  S_i = W_i \cup G \cup R_i, \qquad |S_i| \le w + g + 2r = k,
+\end{equation}
+where $W_i = \{\, j : i - w < j \le i \,\}$ is the dense local window, $G$ is
+the fixed set of $g$ global summary positions, and $R_i$ is the routed
+corridor chosen by the scorer of Section~\ref{sec:scorer}. The mask $M_S$ has
+a finite entry exactly on $S_i$, and the layer computes the softmax of
+Equation~\eqref{eq:dense} over that support and nothing else.
+
+\subsection{Block summaries}\label{sec:summaries}
+
+The router never looks at individual key positions. The sequence is cut into
+$m = \lceil n/b \rceil$ blocks of $b$ consecutive positions, and block $j$ is
+represented by the mean of its keys,
+\begin{equation}\label{eq:summary}
+  s_j = \frac{1}{b} \sum_{t=(j-1)b+1}^{jb} K_j ,
+\end{equation}
+computed once per layer and head. Mean-pooling is sufficient because the
+scorer only has to rank blocks, not reconstruct them: a block whose keys are
+on average aligned with a query is the block that contains the individual
+keys that are, and the exact softmax over the selected block then does the
+fine-grained weighting that the summary cannot.
+
+\subsection{The corridor scorer}\label{sec:scorer}
+
+Queries are pooled the same way, $\bar{q}_I$ being the mean query of block
+$I$. The scorer assigns every pair of a query block $I$ and a key block
+$j \le I$ the score
+\begin{equation}\label{eq:score}
+  \sigma_{Ij} = \frac{\bar{q}_I \cdot s_j}{\sqrt{d_h}} ,
+\end{equation}
+which costs $m^2 d_h$ multiply--accumulates per layer and head, that is
+$\Theta(n^2 d_h / b^2)$, the term quoted in Section~\ref{sec:intro}. Each
+query $i$ in block $I$ then re-scores the $2\rho$ highest-scoring key blocks
+of its own block against its own $q_i$ and keeps the top $\rho = r/b$ of
+them; $R_i$ is the set of all positions in those $\rho$ blocks, so
+$|R_i| = \rho b = r$ for every $i$. The re-scoring costs $2\rho d_h$ per
+query and is what makes the selection per-query while the scoring stays
+per-block. We require $r$ to be a multiple of $b$ throughout.
+
+No selected key lies in the future of its query, by induction on $i$: for
+$i = 1$ the only admissible block is block $1$, all of whose positions are
+at most $1$; and if the claim holds for $i$ it holds for $i + 1$, because
+$\lceil (i+1)/b \rceil \ge \lceil i/b \rceil$ admits no earlier block.
+
+\subsection{Training the discrete selection}\label{sec:training}
+
+The top-$\rho$ selection is not differentiable. We use a straight-through
+estimator: the forward pass uses the hard selection, and the backward pass
+treats the selection as the softmax of the block scores $\sigma_{I\cdot}$
+over the causal blocks, so the scorer receives a gradient whenever the
+selected blocks were useful. No auxiliary load-balancing loss is needed, for
+the reason made precise in Proposition~\ref{prop:cost}.
+
+\begin{lemma}[Exactness]\label{lem:exact}
+For every query $i$ with $S_i \ne \emptyset$, the output of Corridor
+Attention equals the output of Equation~\eqref{eq:dense}.
+\end{lemma}
+\begin{proof}
+Write $\ell_{ij} = q_i \cdot k_j / \sqrt{d_h}$. For $j \in S_i$ the masked
+logit $\ell_{ij} + (M_S)_{ij}$ equals $\ell_{ij}$, so the two softmaxes
+agree on every term of $S_i$, and the two distributions coincide.
+\end{proof}
+
+\begin{proposition}[Cost is independent of routing]\label{prop:cost}
+If $r$ is a multiple of $b$, the number of key positions any query attends
+to is at most $k$, whatever the scorer chooses.
+\end{proposition}
+\begin{proof}
+Since the cost of the layer does not depend on which blocks the scorer
+chooses, every query attends to the same number of routed positions, so
+$|R_i| = r$ for every $i$; with $|W_i| \le w$ and $|G| = g$,
+Equation~\eqref{eq:support} gives $|S_i| \le k$.
+\end{proof}
+
+\subsection{Cost model}\label{sec:cost}
+
+Per token and per head, dense attention spends
+$C_{\mathrm{dense}}(n) = 4 n d_h$ multiply--accumulates: $2 n d_h$ for the
+scores and $2 n d_h$ for the weighted sum. Corridor Attention spends
+\begin{equation}\label{eq:cost}
+  C_{\mathrm{corr}}(n) = 4 k d_h + \frac{2 n d_h}{b^{2}} ,
+\end{equation}
+the first term for the attention over the $k$ permitted keys and the second
+for this token's share of the block scorer. Setting the two equal and
+solving for $n$ gives the predicted crossover
+\begin{equation}\label{eq:crossover}
+  n^{*} = \frac{2 k b^{2}}{2 b^{2} + 1} ,
+\end{equation}
+above which Corridor Attention is cheaper. At $b = 64$ and $k = 512$ this is
+$n^{*} \approx 512.06$: the corridor pays off as soon as the context is
+longer than the bandwidth. The scorer's term is smaller than the attention
+term at $n = 32$k, so the layer's cost is linear in $n$. Memory is
+$\Theta(nk)$ for the attention scores against the $\Theta(n^2)$ of a naive
+dense implementation, and the $m^2$ block scores are negligible at the block
+sizes we use.
+
+\subsection{Implementation}\label{sec:impl}
+
+The routed corridor is gathered with a block-sparse kernel that copies the
+candidate key and value blocks of each query block into a contiguous buffer,
+runs a dense attention over the buffer, and scatters the result back. The
+per-query choice of $\rho$ blocks among the $2\rho$ candidates is applied as
+a mask inside the buffer, so the gather is shared by a query block while the
+selection stays per-query. Block summaries are recomputed at every layer
+from that layer's keys and queries. The local window and the global
+summaries use the fused kernel of \citet{dao2022flashattention} unchanged.
+

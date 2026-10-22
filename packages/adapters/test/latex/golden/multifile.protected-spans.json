@@ -1,0 +1,97 @@
+[
+  {
+    "section": "Overview",
+    "spans": [
+      {
+        "file": "main.tex",
+        "startOffset": 43,
+        "endOffset": 61,
+        "kind": "markup",
+        "token": "⟦P0⟧",
+        "raw": "\\section{Overview}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 76,
+        "endOffset": 92,
+        "kind": "cite",
+        "token": "⟦P1⟧",
+        "raw": "\\cite{alpha2020}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 95,
+        "endOffset": 117,
+        "kind": "markup",
+        "token": "⟦P2⟧",
+        "raw": "\\input{sections/intro}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 118,
+        "endOffset": 141,
+        "kind": "markup",
+        "token": "⟦P3⟧",
+        "raw": "\\input{sections/method}"
+      }
+    ]
+  },
+  {
+    "section": "Introduction",
+    "spans": [
+      {
+        "file": "sections/intro.tex",
+        "startOffset": 0,
+        "endOffset": 22,
+        "kind": "markup",
+        "token": "⟦P0⟧",
+        "raw": "\\section{Introduction}"
+      },
+      {
+        "file": "sections/intro.tex",
+        "startOffset": 22,
+        "endOffset": 39,
+        "kind": "ref",
+        "token": "⟦P1⟧",
+        "raw": "\\label{sec:intro}"
+      },
+      {
+        "file": "sections/intro.tex",
+        "startOffset": 60,
+        "endOffset": 75,
+        "kind": "cite",
+        "token": "⟦P2⟧",
+        "raw": "\\cite{beta2021}"
+      }
+    ]
+  },
+  {
+    "section": "Method",
+    "spans": [
+      {
+        "file": "sections/method.tex",
+        "startOffset": 0,
+        "endOffset": 16,
+        "kind": "markup",
+        "token": "⟦P0⟧",
+        "raw": "\\section{Method}"
+      },
+      {
+        "file": "sections/method.tex",
+        "startOffset": 16,
+        "endOffset": 34,
+        "kind": "ref",
+        "token": "⟦P1⟧",
+        "raw": "\\label{sec:method}"
+      },
+      {
+        "file": "sections/method.tex",
+        "startOffset": 55,
+        "endOffset": 70,
+        "kind": "ref",
+        "token": "⟦P2⟧",
+        "raw": "\\ref{sec:intro}"
+      }
+    ]
+  }
+]

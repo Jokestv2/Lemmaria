@@ -1,0 +1,21 @@
+\begin{table}[t]
+  \centering
+  \begin{tabular}{lrrr}
+    \toprule
+    Model & PPL @ 8k & PPL @ 32k & ms / step @ 32k \\
+    \midrule
+    Dense attention           & 12.4 & 11.9 & 1840 \\
+    Sliding window (512)      & 13.6 & 13.5 &  610 \\
+    Longformer-style          & 13.1 & 12.9 &  640 \\
+    BigBird-style             & 13.0 & 12.7 &  690 \\
+    Linformer (rank 256)      & 14.2 & 14.8 &  520 \\
+    Performer (256 features)  & 14.0 & 14.4 &  560 \\
+    Routing Transformer       & 12.9 & 12.6 &  980 \\
+    Corridor Attention (ours) & 12.6 & 12.1 &  660 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Validation perplexity of the 350M models on the text corpus, and
+    the wall-clock time of one training step at 32k context; mean of three
+    seeds.}
+  \label{tab:main}
+\end{table}

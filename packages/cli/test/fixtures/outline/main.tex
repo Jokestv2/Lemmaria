@@ -1,0 +1,25 @@
+\documentclass{article}
+\title{A Sample Paper for the Repo Map}
+\begin{document}
+
+\section{Introduction}\label{sec:intro}
+Attention mechanisms have become the dominant approach for sequence
+modeling~\cite{vaswani2017attention}. We study their cost.
+
+\subsection{Motivation}\label{sec:motivation}
+Quadratic cost limits context length~\cite{child2019sparse}.
+
+\subsection{Contributions}
+We propose a cheaper attention variant and evaluate it broadly.
+
+\section{Related Work}\label{sec:related}
+Sparse attention~\cite{child2019sparse}, linear attention~\cite{katharopoulos2020linear},
+and low-rank projections~\cite{wang2020linformer} all reduce cost.
+
+\input{sections/method}
+\input{sections/evaluation}
+
+\section{Conclusion}\label{sec:conclusion}
+We presented a cheaper attention mechanism with competitive quality.
+
+\end{document}

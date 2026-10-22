@@ -1,0 +1,3 @@
+# Keep LF in the working tree on every platform (biome formats/checks LF).
+# eol=lf overrides core.autocrlf so Windows checkouts don't materialize CRLF.
+* text=auto eol=lf

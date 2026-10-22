@@ -1,0 +1,9 @@
+\section{Method}\label{sec:method}
+Our method replaces the softmax attention with a kernel feature map.
+
+\subsection{Kernelized Attention}\label{sec:kernel}
+We approximate $\mathrm{softmax}(QK^\top)V$ with feature maps $\phi(Q)\phi(K)^\top V$,
+following~\cite{katharopoulos2020linear}.
+
+\subsection{Complexity Analysis}\label{sec:complexity}
+The cost drops from $O(n^2 d)$ to $O(n d^2)$ in the sequence length $n$.

@@ -1,0 +1,197 @@
+{
+  "fixture": "visual-defects",
+  "file": "main.tex",
+  "venue": {
+    "id": "s6-fixture-venue",
+    "pageLimit": {
+      "value": 2,
+      "unit": "pages",
+      "note": "pages in the compiled PDF, floats included"
+    },
+    "anonymity": "double_blind"
+  },
+  "defective": {
+    "pages": 3,
+    "pageSize": "a4"
+  },
+  "clean": {
+    "pages": 2,
+    "pageSize": "letter"
+  },
+  "defects": [
+    {
+      "id": "V1",
+      "category": "layout",
+      "kind": "text-in-the-margin",
+      "page": 1,
+      "spans": [
+        {
+          "anchor": "\\noindent\\hspace*{-2.4cm}This sentence has been pushed bodily into the left margin",
+          "line": 31
+        }
+      ],
+      "facts": false,
+      "see": "in the left column, a line beginning mid-word (\"his sentence has been pushed...\") runs off the left edge of the text block and is clipped by the page",
+      "tell": "a negative \\hspace* moved the line 2.4 cm left; the source reads as ordinary prose, so only the rendered page shows it"
+    },
+    {
+      "id": "V2",
+      "category": "layout",
+      "kind": "table-past-the-column",
+      "page": 1,
+      "spans": [
+        {
+          "anchor": "\\begin{tabular}{lrrrrrrrrr}",
+          "line": 84
+        },
+        {
+          "anchor": "Dataset & Len & PPL & PPL$_c$ & Acc & Acc$_c$ & FLOPs & Mem & Time & $\\Delta$ \\\\",
+          "line": 86
+        }
+      ],
+      "facts": false,
+      "see": "Table 1 in the right column is cut off at the column edge; the last header reads \"FLOP\" and the columns Mem / Time / Delta are missing entirely",
+      "tell": "ten columns in a two-column layout; LaTeX sets it and reports an overfull hbox, it does not refuse"
+    },
+    {
+      "id": "V3",
+      "category": "legibility",
+      "kind": "labels-vanish-at-print-size",
+      "page": 1,
+      "spans": [
+        {
+          "anchor": "\\begin{tikzpicture}[font=\\fontsize{2}{2}\\selectfont]",
+          "line": 62
+        },
+        {
+          "anchor": "  tick label style={font=\\fontsize{2}{2}\\selectfont},",
+          "line": 66
+        }
+      ],
+      "facts": true,
+      "see": "Figure 2's axis labels, tick labels and legend are set so small they are unreadable, while Figure 1 on the same page is legible",
+      "tell": "\\fontsize{2}{2} on the tikzpicture; the source names a font size, it does not say the result is illegible"
+    },
+    {
+      "id": "V4",
+      "category": "layout",
+      "kind": "stranded-heading-and-gap",
+      "page": 2,
+      "spans": [
+        {
+          "anchor": "\\vspace{13.2cm}",
+          "line": 111
+        },
+        {
+          "anchor": "\\subsection{Retrieval probes}",
+          "line": 112
+        }
+      ],
+      "facts": false,
+      "see": "the left column of page 2 is blank for roughly two thirds of its height, and heading \"3.2 Retrieval probes\" sits at the bottom of that column",
+      "tell": "a \\vspace{13.2cm} before the heading; a source reader sees a length, a page reader sees a hole"
+    },
+    {
+      "id": "V5",
+      "category": "float-placement",
+      "kind": "float-pages-from-its-reference",
+      "page": 3,
+      "spans": [
+        {
+          "anchor": "\\begin{figure}[p]",
+          "line": 122
+        }
+      ],
+      "facts": false,
+      "see": "Figure 3 sits alone on page 3, two pages after the Method section it illustrates and after the Conclusion",
+      "tell": "the [p] float specifier; where a float lands is decided by the compiler, never by the source"
+    },
+    {
+      "id": "V6",
+      "category": "geometry",
+      "kind": "wrong-page-size",
+      "page": null,
+      "spans": [
+        {
+          "anchor": "\\usepackage[a4paper,margin=2cm]{geometry}",
+          "line": 2
+        }
+      ],
+      "facts": true,
+      "see": "every page is A4 (595 x 842 pt) where the venue requires Letter (612 x 792 pt) - taller and narrower",
+      "tell": "geometry's a4paper option; a deterministic fact, and the one defect a model should NOT need to see pixels for"
+    },
+    {
+      "id": "V7",
+      "category": "venue-compliance",
+      "kind": "over-the-page-limit",
+      "page": 3,
+      "spans": [
+        {
+          "anchor": "\\section{Additional analysis}",
+          "line": 145
+        }
+      ],
+      "facts": true,
+      "see": "the document runs to 3 pages against a 2-page limit",
+      "tell": "deterministic once the PDF exists, and not predictable from the source at all"
+    },
+    {
+      "id": "V8",
+      "category": "figure-text-agreement",
+      "kind": "caption-contradicts-figure",
+      "page": 1,
+      "spans": [
+        {
+          "anchor": "\\caption{Attention cost as a function of sequence length. Both methods show cost",
+          "line": 47
+        },
+        {
+          "anchor": "\\emph{decreasing} as the sequence grows, with the dense baseline falling fastest.}",
+          "line": 48
+        }
+      ],
+      "facts": false,
+      "see": "Figure 1's caption says cost is \"decreasing as the sequence grows, with the dense baseline falling fastest\"; both plotted curves rise, and the dense one rises fastest",
+      "tell": "needs the caption AND the plotted curve together; the source has the caption text and a formula, never the drawn shape"
+    },
+    {
+      "id": "V9",
+      "category": "float-placement",
+      "kind": "unreferenced-figure",
+      "page": 3,
+      "spans": [
+        {
+          "anchor": "\\caption{Corridor entropy over training.}",
+          "line": 130
+        },
+        {
+          "anchor": "\\label{fig:entropy}",
+          "line": 131
+        }
+      ],
+      "facts": false,
+      "see": "Figure 3 is never referred to by any sentence in the paper",
+      "tell": "findable in source too (no \\ref{fig:entropy}), so it is the fixture's control for \"did the model need the pixels?\""
+    },
+    {
+      "id": "V10",
+      "category": "venue-compliance",
+      "kind": "identity-on-an-anonymous-submission",
+      "page": 1,
+      "spans": [
+        {
+          "anchor": "\\author{A.~Fixture\\\\Fixture Institute of Computing\\\\\\texttt{a.fixture@example.edu}}",
+          "line": 10
+        },
+        {
+          "anchor": "\\pdfinfo{/Author (A. Fixture)}",
+          "line": 12
+        }
+      ],
+      "facts": false,
+      "see": "the title block names an author, an institution and an e-mail address on a double-blind submission",
+      "tell": "also findable in source; the second control, and the one an author most wants caught"
+    }
+  ]
+}

@@ -1,0 +1,476 @@
+{
+  "fixture": "planted-defects-split",
+  "file": "main.tex",
+  "categories": ["surface", "claim", "reasoning", "experimental"],
+  "defects": [
+    {
+      "id": "S1",
+      "category": "surface",
+      "subtype": "operator-sign",
+      "original": "  n^{*} = \\frac{2 k b^{2}}{2 b^{2} - 1} ,",
+      "perturbed": "  n^{*} = \\frac{2 k b^{2}}{2 b^{2} + 1} ,",
+      "spans": [
+        {
+          "anchor": "  n^{*} = \\frac{2 k b^{2}}{2 b^{2} + 1} ,",
+          "line": 95,
+          "file": "sections/method.tex"
+        },
+        {
+          "anchor": "$n^{*} \\approx 512.06$: the corridor pays off as soon as the context is",
+          "line": 98,
+          "file": "sections/method.tex"
+        }
+      ],
+      "tell": "solving `4n d_h = 4k d_h + 2n d_h/b²` gives `2b² − 1` in the denominator; with `+ 1` the stated `n* ≈ 512.06` does not follow."
+    },
+    {
+      "id": "S2",
+      "category": "surface",
+      "subtype": "index-subscript",
+      "original": "  s_j = \\frac{1}{b} \\sum_{t=(j-1)b+1}^{jb} K_t ,",
+      "perturbed": "  s_j = \\frac{1}{b} \\sum_{t=(j-1)b+1}^{jb} K_j ,",
+      "spans": [
+        {
+          "anchor": "  s_j = \\frac{1}{b} \\sum_{t=(j-1)b+1}^{jb} K_j ,",
+          "line": 23,
+          "file": "sections/method.tex"
+        },
+        {
+          "anchor": "$m = \\lceil n/b \\rceil$ blocks of $b$ consecutive positions, and block $j$ is\nrepresented by the mean of its keys,",
+          "line": 20,
+          "endLine": 21,
+          "file": "sections/method.tex"
+        }
+      ],
+      "tell": "the summand no longer depends on the summation index `t`, so the \"mean of its keys\" is `b · K_j / b = K_j`, a single key rather than a mean."
+    },
+    {
+      "id": "S3",
+      "category": "surface",
+      "subtype": "numeric",
+      "original": "  S_i = W_i \\cup G \\cup R_i, \\qquad |S_i| \\le w + g + r = k,",
+      "perturbed": "  S_i = W_i \\cup G \\cup R_i, \\qquad |S_i| \\le w + g + 2r = k,",
+      "spans": [
+        {
+          "anchor": "  S_i = W_i \\cup G \\cup R_i, \\qquad |S_i| \\le w + g + 2r = k,",
+          "line": 9,
+          "file": "sections/method.tex"
+        },
+        {
+          "anchor": "$k = w + g + r$, where $r$ is the routed bandwidth.",
+          "line": 26,
+          "file": "sections/background.tex"
+        }
+      ],
+      "tell": "Background defines `k = w + g + r`; the coefficient 2 contradicts the definition and the setup's `112 + 16 + 384 = 512`."
+    },
+    {
+      "id": "S4",
+      "category": "surface",
+      "subtype": "computation",
+      "original": "$k = w + g + r = 112 + 16 + 384 = 512$.",
+      "perturbed": "$k = w + g + r = 112 + 16 + 384 = 522$.",
+      "spans": [
+        {
+          "anchor": "$k = w + g + r = 112 + 16 + 384 = 522$.",
+          "line": 12,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "above which Corridor Attention is cheaper. At $b = 64$ and $k = 512$ this is",
+          "line": 97,
+          "file": "sections/method.tex"
+        }
+      ],
+      "tell": "112 + 16 + 384 = 512, and the cost-model section uses k = 512."
+    },
+    {
+      "id": "C1",
+      "category": "claim",
+      "subtype": "false theoretical claim (dropped restriction)",
+      "original": "For every query $i$ with $S_i \\ne \\emptyset$, the output of Corridor\nAttention equals the output of Equation~\\eqref{eq:dense} with $M$ replaced\nby $M_S$.",
+      "perturbed": "For every query $i$ with $S_i \\ne \\emptyset$, the output of Corridor\nAttention equals the output of Equation~\\eqref{eq:dense}.",
+      "spans": [
+        {
+          "anchor": "For every query $i$ with $S_i \\ne \\emptyset$, the output of Corridor\nAttention equals the output of Equation~\\eqref{eq:dense}.",
+          "line": 63,
+          "endLine": 64,
+          "file": "sections/method.tex"
+        },
+        {
+          "anchor": "    Corridor Attention (ours) & 12.6 & 12.1 &  660 \\\\",
+          "line": 14,
+          "file": "tables/main-results.tex"
+        },
+        {
+          "anchor": "    Dense attention           & 12.4 & 11.9 & 1840 \\\\",
+          "line": 7,
+          "file": "tables/main-results.tex"
+        }
+      ],
+      "tell": "without \"with M replaced by M_S\" the lemma claims restricted attention equals *dense* attention, which the proof does not show (it establishes equality with the masked softmax) and Table 1 contradicts (12.1 vs 11.9)."
+    },
+    {
+      "id": "C2",
+      "category": "claim",
+      "subtype": "false empirical claim",
+      "original": "for dense attention and 13.5 for the sliding window: it recovers 88\\% of the",
+      "perturbed": "for dense attention and 13.5 for the sliding window: it recovers 98\\% of the",
+      "spans": [
+        {
+          "anchor": "for dense attention and 13.5 for the sliding window: it recovers 98\\% of the",
+          "line": 36,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "    Corridor Attention (ours) & 12.6 & 12.1 &  660 \\\\",
+          "line": 14,
+          "file": "tables/main-results.tex"
+        },
+        {
+          "anchor": "    Dense attention           & 12.4 & 11.9 & 1840 \\\\",
+          "line": 7,
+          "file": "tables/main-results.tex"
+        },
+        {
+          "anchor": "    Sliding window (512)      & 13.6 & 13.5 &  610 \\\\",
+          "line": 8,
+          "file": "tables/main-results.tex"
+        }
+      ],
+      "tell": "(13.5 − 12.1)/(13.5 − 11.9) = 0.875, not 0.98."
+    },
+    {
+      "id": "C3",
+      "category": "claim",
+      "subtype": "false theoretical claim",
+      "original": "bandwidth. It keeps the cost of long-context attention linear with a constant\nthe practitioner chooses, and it recovers most of the quality of dense",
+      "perturbed": "bandwidth. It keeps the cost of long-context attention constant in the\nsequence length, and it recovers most of the quality of dense",
+      "spans": [
+        {
+          "anchor": "bandwidth. It keeps the cost of long-context attention constant in the\nsequence length, and it recovers most of the quality of dense",
+          "line": 5,
+          "endLine": 6,
+          "file": "sections/conclusion.tex"
+        },
+        {
+          "anchor": "  C_{\\mathrm{corr}}(n) = 4 k d_h + \\frac{2 n d_h}{b^{2}} ,",
+          "line": 89,
+          "file": "sections/method.tex"
+        },
+        {
+          "anchor": "cost is linear in sequence length with a constant that the practitioner sets",
+          "line": 33,
+          "file": "main.tex"
+        }
+      ],
+      "tell": "eq:cost is per token, so over n tokens the layer spends `4nkd_h + 2n²d_h/b²` — for every `n < 2kb²` the second term is under the first, so the layer costs at most twice its linear term, which is what the abstract and § Cost model claim; \"constant in the sequence length\" contradicts them at every n."
+    },
+    {
+      "id": "C4",
+      "category": "claim",
+      "subtype": "false empirical claim (inverted)",
+      "original": "350M model at 32k. Ablating the dense local window costs 2.8 perplexity,\nmore than ablating the whole routed corridor ($r = 0$, $+1.3$), which is the\nobservation behind the third design commitment of Section~\\ref{sec:intro}.",
+      "perturbed": "350M model at 32k. Ablating the whole routed corridor costs more perplexity\nthan ablating the dense local window, which is the observation behind the\nthird design commitment of Section~\\ref{sec:intro}.",
+      "spans": [
+        {
+          "anchor": "350M model at 32k. Ablating the whole routed corridor costs more perplexity\nthan ablating the dense local window, which is the observation behind the\nthird design commitment of Section~\\ref{sec:intro}.",
+          "line": 78,
+          "endLine": 80,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "    No local window ($w = 0$)     & 14.9 & $+2.8$ \\\\",
+          "line": 95,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "    No routed corridor ($r = 0$)  & 13.4 & $+1.3$ \\\\",
+          "line": 96,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "\\paragraph{The local window is not negotiable.} Ablating the dense local",
+          "line": 50,
+          "file": "sections/introduction.tex"
+        }
+      ],
+      "tell": "Table 3 says +2.8 for the window and +1.3 for the corridor; the Introduction's third commitment says the opposite of the perturbed sentence."
+    },
+    {
+      "id": "R1",
+      "category": "reasoning",
+      "subtype": "circular",
+      "original": "By construction every query keeps exactly $\\rho = r/b$ blocks, so\n$|R_i| = \\rho b = r$ for every $i$; with $|W_i| \\le w$ and $|G| = g$,\nEquation~\\eqref{eq:support} gives $|S_i| \\le k$. Nothing in the bound\ndepends on which blocks were chosen.",
+      "perturbed": "Since the cost of the layer does not depend on which blocks the scorer\nchooses, every query attends to the same number of routed positions, so\n$|R_i| = r$ for every $i$; with $|W_i| \\le w$ and $|G| = g$,\nEquation~\\eqref{eq:support} gives $|S_i| \\le k$.",
+      "spans": [
+        {
+          "anchor": "Since the cost of the layer does not depend on which blocks the scorer\nchooses, every query attends to the same number of routed positions, so\n$|R_i| = r$ for every $i$; with $|W_i| \\le w$ and $|G| = g$,\nEquation~\\eqref{eq:support} gives $|S_i| \\le k$.",
+          "line": 77,
+          "endLine": 80,
+          "file": "sections/method.tex"
+        },
+        {
+          "anchor": "\\begin{proposition}[Cost is independent of routing]\\label{prop:cost}\nIf $r$ is a multiple of $b$, the number of key positions any query attends\nto is at most $k$, whatever the scorer chooses.",
+          "line": 72,
+          "endLine": 74,
+          "file": "sections/method.tex"
+        }
+      ],
+      "tell": "the proof assumes its conclusion — that the cost is independent of the routing — to derive `|R_i| = r`, which is what the proposition needs established."
+    },
+    {
+      "id": "R2",
+      "category": "reasoning",
+      "subtype": "invalid implication",
+      "original": "longer than the bandwidth. The scorer's term is smaller than the attention\nterm for every $n < 2 k b^{2}$, which at the settings of\nSection~\\ref{sec:setup} is about four million tokens, so for every such $n$\nthe whole layer costs at most twice its linear term $4 n k d_h$. Memory is",
+      "perturbed": "longer than the bandwidth. The scorer's term is smaller than the attention\nterm at $n = 32$k, so the layer's cost is linear in $n$. Memory is",
+      "spans": [
+        {
+          "anchor": "longer than the bandwidth. The scorer's term is smaller than the attention\nterm at $n = 32$k, so the layer's cost is linear in $n$. Memory is",
+          "line": 99,
+          "endLine": 100,
+          "file": "sections/method.tex"
+        },
+        {
+          "anchor": "  C_{\\mathrm{corr}}(n) = 4 k d_h + \\frac{2 n d_h}{b^{2}} ,",
+          "line": 89,
+          "file": "sections/method.tex"
+        }
+      ],
+      "tell": "a comparison at one n says nothing about all n; eq:cost's second term grows with n, and the honest statement bounds the range (`n < 2kb²`)."
+    },
+    {
+      "id": "R3",
+      "category": "reasoning",
+      "subtype": "missing case",
+      "original": "Write $\\ell_{ij} = q_i \\cdot k_j / \\sqrt{d_h}$. For $j \\in S_i$ the masked\nlogit $\\ell_{ij} + (M_S)_{ij}$ equals $\\ell_{ij}$; for $j \\notin S_i$ it is\n$-\\infty$ and its exponential is zero. The normaliser of the masked softmax\nis therefore $\\sum_{j \\in S_i} \\exp \\ell_{ij}$, which is the normaliser of\nthe softmax over $S_i$, and the two distributions coincide term by term.",
+      "perturbed": "Write $\\ell_{ij} = q_i \\cdot k_j / \\sqrt{d_h}$. For $j \\in S_i$ the masked\nlogit $\\ell_{ij} + (M_S)_{ij}$ equals $\\ell_{ij}$, so the two softmaxes\nagree on every term of $S_i$, and the two distributions coincide.",
+      "spans": [
+        {
+          "anchor": "Write $\\ell_{ij} = q_i \\cdot k_j / \\sqrt{d_h}$. For $j \\in S_i$ the masked\nlogit $\\ell_{ij} + (M_S)_{ij}$ equals $\\ell_{ij}$, so the two softmaxes\nagree on every term of $S_i$, and the two distributions coincide.",
+          "line": 67,
+          "endLine": 69,
+          "file": "sections/method.tex"
+        }
+      ],
+      "tell": "the case `j ∉ S_i` is never treated, so nothing shows the masked normaliser equals the restricted one; agreeing logits on `S_i` do not give agreeing probabilities."
+    },
+    {
+      "id": "R4",
+      "category": "reasoning",
+      "subtype": "induction error",
+      "original": "Every block selected for query $i$ has index $j \\le I = \\lceil i/b \\rceil$,\nand inside block $I$ itself the causal mask $M$ of Equation~\\eqref{eq:dense}\nremoves the positions $t > i$; so no selected key lies in the future of its\nquery.",
+      "perturbed": "No selected key lies in the future of its query, by induction on $i$: for\n$i = 1$ the only admissible block is block $1$, all of whose positions are\nat most $1$; and if the claim holds for $i$ it holds for $i + 1$, because\n$\\lceil (i+1)/b \\rceil \\ge \\lceil i/b \\rceil$ admits no earlier block.",
+      "spans": [
+        {
+          "anchor": "No selected key lies in the future of its query, by induction on $i$: for\n$i = 1$ the only admissible block is block $1$, all of whose positions are\nat most $1$; and if the claim holds for $i$ it holds for $i + 1$, because\n$\\lceil (i+1)/b \\rceil \\ge \\lceil i/b \\rceil$ admits no earlier block.",
+          "line": 48,
+          "endLine": 51,
+          "file": "sections/method.tex"
+        }
+      ],
+      "tell": "the base case is false for `b > 1` (block 1 holds positions 1..b, so positions 2..b are in the future of query 1), and the step argues about block indices rather than positions; what actually removes `t > i` is the mask `M` inside the current block, which the argument no longer mentions."
+    },
+    {
+      "id": "E1",
+      "category": "experimental",
+      "subtype": "reversed causality",
+      "original": "28k. The routed corridor is what carries the long-distance signal: with\n$r = 0$ the accuracy at 28k falls from 91\\% to 4\\%.",
+      "perturbed": "28k. The high accuracy at 28k is what lets the routed corridor carry a\nlong-distance signal: with $r = 0$ it falls from 91\\% to 4\\%.",
+      "spans": [
+        {
+          "anchor": "28k. The high accuracy at 28k is what lets the routed corridor carry a\nlong-distance signal: with $r = 0$ it falls from 91\\% to 4\\%.",
+          "line": 55,
+          "endLine": 56,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "    Corridor, $r = 0$         & 97 & 11 &  4 \\\\",
+          "line": 67,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "the ablation removes the corridor and the accuracy falls, so the corridor is the cause of the accuracy; the sentence has the effect causing its cause."
+    },
+    {
+      "id": "E2",
+      "category": "experimental",
+      "subtype": "misinterpretation of results",
+      "original": "paired test for the Corridor-versus-BigBird difference at 32k gives\n$p = 0.03$, so we read the 0.6-point gap as real.",
+      "perturbed": "paired test for the Corridor-versus-BigBird difference at 32k gives\n$p = 0.30$, strong evidence that the 0.6-point gap is real.",
+      "spans": [
+        {
+          "anchor": "paired test for the Corridor-versus-BigBird difference at 32k gives\n$p = 0.30$, strong evidence that the 0.6-point gap is real.",
+          "line": 42,
+          "endLine": 43,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "p = 0.30 is not evidence against the null at any conventional level; the sentence reads a non-significant result as strong evidence."
+    },
+    {
+      "id": "E3",
+      "category": "experimental",
+      "subtype": "p-hacking",
+      "original": "and 8 accelerators per run. We train three seeds of every configuration and\nreport the mean; the spread across seeds is $\\pm 0.1$ perplexity, so we\ntreat differences of more than $0.2$ as outside seed noise, and where a",
+      "perturbed": "and 8 accelerators per run. We train five seeds of every configuration and\nreport the run with the lowest perplexity; the spread across seeds is\n$\\pm 0.1$, so we treat differences of more than $0.2$ as real, and where a",
+      "spans": [
+        {
+          "anchor": "and 8 accelerators per run. We train five seeds of every configuration and\nreport the run with the lowest perplexity; the spread across seeds is\n$\\pm 0.1$, so we treat differences of more than $0.2$ as real, and where a",
+          "line": 26,
+          "endLine": 28,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "    the wall-clock time of one training step at 32k context; mean of three",
+          "line": 18,
+          "file": "tables/main-results.tex"
+        }
+      ],
+      "tell": "reporting the best of five seeds selects on the outcome; every table then overstates the method, and Table 1's caption still says \"mean of three seeds\"."
+    },
+    {
+      "id": "E4",
+      "category": "experimental",
+      "subtype": "flawed design — unequal baseline",
+      "original": "\\citep{roy2021efficient}. Every baseline is trained with the same optimiser,\nschedule and token budget as our model, and the sparse baselines are set so\nthat each query sees at most 512 keys, matching $k$.",
+      "perturbed": "\\citep{roy2021efficient}. Every baseline is trained for 50k steps, half our\nbudget, with its published hyperparameters, and the sparse baselines are set\nso that each query sees at most 512 keys, matching $k$.",
+      "spans": [
+        {
+          "anchor": "\\citep{roy2021efficient}. Every baseline is trained for 50k steps, half our\nbudget, with its published hyperparameters, and the sparse baselines are set\nso that each query sees at most 512 keys, matching $k$.",
+          "line": 20,
+          "endLine": 22,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "gap between the window and dense attention at a matched training budget,",
+          "line": 37,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "the results claim a comparison \"at a matched training budget\"; baselines at half the budget make every perplexity gap a confound of compute, not architecture."
+    }
+  ],
+  "traps": [
+    {
+      "id": "T1",
+      "complaint": "The cost model is never validated against measured time.",
+      "bait": [
+        {
+          "anchor": "Per token and per head, dense attention spends",
+          "line": 85,
+          "file": "sections/method.tex"
+        }
+      ],
+      "answer": [
+        {
+          "anchor": "tokens for our settings. Measured on the 350M model, dense attention is",
+          "line": 111,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "The results measure the crossover on the 350M model -- dense attention faster below 540 tokens, Corridor Attention above -- and set it against the cost model's predicted 512, within the timer's resolution."
+    },
+    {
+      "id": "T2",
+      "complaint": "Nothing shows that the learned routing matters rather than the extra bandwidth.",
+      "bait": [
+        {
+          "anchor": "A lightweight scorer, operating on block summaries rather than on individual",
+          "line": 28,
+          "file": "sections/introduction.tex"
+        }
+      ],
+      "answer": [
+        {
+          "anchor": "Freezing the router at its initialisation costs 1.1, so the learned routing,",
+          "line": 81,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "The ablations freeze the router at its initialisation and report a 1.1 perplexity cost, which is the paper's own separation of learned routing from extra bandwidth."
+    },
+    {
+      "id": "T3",
+      "complaint": "The paper reports no limitation and no negative result.",
+      "bait": [
+        {
+          "anchor": "directly. We describe the method, characterise its cost, and evaluate it on",
+          "line": 34,
+          "file": "main.tex"
+        }
+      ],
+      "answer": [
+        {
+          "anchor": "Routing Transformer, which lets bandwidth vary per query, beats Corridor",
+          "line": 125,
+          "file": "sections/experiments.tex"
+        },
+        {
+          "anchor": "Two limitations are worth stating plainly. First, the router is trained with a",
+          "line": 9,
+          "file": "sections/discussion.tex"
+        }
+      ],
+      "tell": "The results report a negative result -- Routing Transformer beats Corridor Attention on a heavy-tailed synthetic task -- and the discussion opens a paragraph of limitations; a counter on either passage answers the complaint."
+    },
+    {
+      "id": "T4",
+      "complaint": "The block size is fixed at 64 and never varied or justified.",
+      "bait": [
+        {
+          "anchor": "2k, 8k and 32k tokens. Unless stated otherwise the corridor uses block size",
+          "line": 9,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "answer": [
+        {
+          "anchor": "hurt a little ($b = 128$: 12.4); we chose $b = 64$ as the largest block size",
+          "line": 85,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "The ablations vary the block size to 32 and 128 and justify 64 as the largest block whose perplexity stayed within 0.1 of 32."
+    },
+    {
+      "id": "T5",
+      "complaint": "The global summary tokens are never ablated.",
+      "bait": [
+        {
+          "anchor": "of globally visible summary tokens for discourse-level dependencies, and routes",
+          "line": 30,
+          "file": "main.tex"
+        }
+      ],
+      "answer": [
+        {
+          "anchor": "costs 0.4; removing the global summaries costs 0.3. Smaller blocks help a",
+          "line": 83,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "The ablations report that removing the global summaries costs 0.3 perplexity."
+    },
+    {
+      "id": "T6",
+      "complaint": "The paper does not acknowledge that nothing above 350M parameters was trained.",
+      "bait": [
+        {
+          "anchor": "We train decoder-only language models of 125M and 350M parameters on two",
+          "line": 5,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "answer": [
+        {
+          "anchor": "above 350M parameters, so the stability of the straight-through router at",
+          "line": 127,
+          "file": "sections/experiments.tex"
+        }
+      ],
+      "tell": "The results state that nothing above 350M parameters was trained and call the router's stability at larger widths untested rather than established."
+    }
+  ]
+}

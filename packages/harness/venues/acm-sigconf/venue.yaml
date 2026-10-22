@@ -1,0 +1,17 @@
+id: acm-sigconf
+name: { en: "ACM conference (sigconf)", zh: "ACM 会议（sigconf）" }
+documentclass: { class: acmart, options: [sigconf] }
+engine: pdflatex
+bibstyle: ACM-Reference-Format
+page_limit: { value: 9, unit: pages, note: "excl. references; check your CFP" }
+anonymity: double_blind
+field_map:
+  title: "\\title{...}"
+  authors: "\\author + \\affiliation blocks"
+  abstract: "abstract environment"
+  keywords: "\\keywords{...}"
+theorem_envs: amsthm
+starter_files: [main.tex, references.bib]
+license: LPPL-1.3c
+redistribute: true
+source_url: https://www.acm.org/publications/proceedings-template

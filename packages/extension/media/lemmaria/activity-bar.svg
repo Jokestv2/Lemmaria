@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="52 72 840 840" fill="none" role="img" aria-labelledby="lemmaria-mono-small-white-logo-title" width="24" height="24"><title id="lemmaria-mono-small-white-logo-title">Lemmaria — three layered pebbles</title><defs>
+<path id="lemmaria-mono-small-white-shape-bottom" d="M301.758 546.256C216.969 569.98 135.643 647.227 169.12 730.176c33.476 82.948 141.669 107.204 226.718 125.347 85.048 18.143 180.134 36.267 265.735 4.385 85.601-31.883 142.132-124.876 114.6-207.019-27.533-82.143-121.516-130.636-209.49-141.504-87.975-10.867-180.136 11.147-264.925 34.871Z" />
+<path id="lemmaria-mono-small-white-shape-middle" d="M390.5 312.4C320.052 306.651 226.78 326.592 207.602 395.974s52.544 122.88 112.833 161.281c60.289 38.401 129.148 81.338 201.511 80.385 72.362-.952 149.849-46.605 178.488-111.457 28.639-64.853-33.447-128.288-99.684-160.83-66.236-32.542-139.802-47.204-210.25-52.953Z" />
+<path id="lemmaria-mono-small-white-shape-top" d="M390.5 312.4c38.839 42.36 93.223 83.144 149.807 82.644 56.584-.499 126.028-15.069 164.083-57.019 38.054-41.949 11.057-108.743-30.803-149.086-41.86-40.342-96.547-69.404-154.455-78.99-57.908-9.586-128.342 3.251-161.778 51.839-33.435 48.588-5.693 108.253 33.146 150.612Z" />
+<mask id="lemmaria-mono-small-white-mask-bottom" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000"><rect width="1000" height="1000" fill="white" /><use xlink:href="#lemmaria-mono-small-white-shape-middle" fill="black" stroke="black" stroke-width="84" stroke-linejoin="round" /></mask>
+<mask id="lemmaria-mono-small-white-mask-middle" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000"><rect width="1000" height="1000" fill="white" /><use xlink:href="#lemmaria-mono-small-white-shape-top" fill="black" stroke="black" stroke-width="84" stroke-linejoin="round" /></mask>
+</defs>
+<use xlink:href="#lemmaria-mono-small-white-shape-bottom" fill="#FFFFFF" mask="url(#lemmaria-mono-small-white-mask-bottom)" />
+<use xlink:href="#lemmaria-mono-small-white-shape-middle" fill="#FFFFFF" mask="url(#lemmaria-mono-small-white-mask-middle)" />
+<use xlink:href="#lemmaria-mono-small-white-shape-top" fill="#FFFFFF" />
+</svg>

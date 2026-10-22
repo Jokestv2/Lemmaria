@@ -1,0 +1,109 @@
+schema_version: "1"
+id: "translate"
+kind: edit
+version: "1.0.0"
+name: { en: "Translate", zh: "翻译" }
+description:
+  en: "Translate the selection to the target language, keeping citations, math, and glossary terms exact."
+  zh: "将选区翻译为目标语言，保持引用、公式与术语表用词一致。"
+author: "lemmaria-core"
+license: "SEE LICENSE IN LICENSE.txt"
+tags: [translate, language]
+icon: "globe"
+
+requires:
+  harness: ">=0.0.1"
+  tools: [glossary_lookup]
+  doc_kinds: [latex, markdown]
+
+ui:
+  surfaces: [context_menu, command_palette]
+  group: "edit"
+  requires_selection: false
+
+input:
+  scope: selection
+  scope_fallback: paragraph
+  min_chars: 1
+  max_chars: 20000
+
+routing:
+  level: L1
+  thinking_budget: none
+  tools: [glossary_lookup]
+  max_iterations: 4
+  max_tokens: 6000
+  timeout_s: 90
+
+model:
+  role: writing
+  temperature: 0.3
+
+parameters:
+  - id: target_language
+    name: { en: "Target language", zh: "目标语言" }
+    type: enum
+    enum: [en, zh]
+    # QA-3 (ADR 0041): the picker showed the raw values. The VALUE is what the
+    # prompt and the language_is validator bind to; these are display only.
+    enum_labels:
+      en: { en: "English", zh: "英文" }
+      zh: { en: "Simplified Chinese", zh: "简体中文" }
+    required: true
+    prompt_on_invoke: true
+
+context:
+  neighbors: 0
+  include_glossary: true
+  retrieval_budget: 3
+  protected_spans: freeze
+
+prompt:
+  system: |
+    You are a professional academic translator working on a {{doc.kind}} document.
+    Translate the given text into the target language, preserving meaning, claims,
+    tone, and every ⟦Pn⟧ placeholder exactly as-is (they are frozen citations, refs,
+    and math). Use the project glossary for terminology — call glossary_lookup when
+    unsure of a term's canonical translation. Reply with the translation only — no
+    preamble, no code fences, no commentary.
+    Preserve the layout exactly: keep every blank line between paragraphs, and keep every list item — merging two paragraphs changes the document, not just how it looks.
+  user: |
+    {{#if glossary}}Project glossary (use these exact spellings/translations):
+    {{glossary}}
+
+    {{/if}}Translate the following {{language}} text into "{{params.target_language}}"
+    (en = English, zh = 中文). Keep every ⟦Pn⟧ placeholder exactly as-is.
+
+    {{selection}}
+
+output:
+  contract: replace_selection
+  language: "param:target_language"
+  validators:
+    # Soft: LaTeX markup is already frozen out of the judged prose, so a residual
+    # "mixed" reading means a few terms the model kept in the source language
+    # (proper nouns, untranslatable jargon) — acceptable per product feedback.
+    # Retry still pushes for a full translation; if it can't, propose the best
+    # attempt with a note rather than discarding a good translation.
+    - { type: language_is, expected: "{{params.target_language}}", soft: true }
+    - { type: glossary_consistent }
+    - { type: protected_spans_intact }
+    # D1 (ADR 0032): the shape of the text survives the rewrite. Soft, and
+    # ONE-SIDED — structure must not decrease. A lost blank line merges two
+    # paragraphs, which in LaTeX is a semantic change to the document rather
+    # than a formatting one; gaining a paragraph is not that harm, which is why
+    # the same declaration is correct on expand as on shrink.
+    - { type: layout_preserved, soft: true }
+    # D1 (ADR 0032): figures must survive a language change too — but SOFT here,
+    # where shrink declares it hard. A translation may legitimately localize a
+    # small count ("3 sites" -> "三个站点"), so a hard check would discard a good
+    # translation over a numeral that was rendered rather than lost. Retry still
+    # pushes for the figure; a residual miss is surfaced, not fatal.
+    - { type: numbers_retained, soft: true }
+  on_validation_fail:
+    strategy: retry_with_feedback
+    max_retries: 2
+
+review_ui:
+  mode: inline_diff
+  allow_retry_feedback: true

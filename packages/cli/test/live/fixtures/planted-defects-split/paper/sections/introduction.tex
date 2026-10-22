@@ -1,0 +1,64 @@
+\section{Introduction}\label{sec:intro}
+
+Self-attention \citep{vaswani2017attention} computes an interaction between
+every pair of positions in a sequence. That property is the reason
+transformers model long-range structure well, and it is also the reason their
+cost grows as $\Theta(n^2)$ in the sequence length $n$. For the context
+lengths that are now routinely requested of production models --- tens of
+thousands of tokens of source code, a whole scientific article and its
+appendices, a multi-day conversation --- the attention term stops being a
+constant factor and starts being the budget.
+
+The literature has answered this in two broadly different ways. One family
+\emph{restricts} the interaction pattern: sliding windows, dilated windows,
+strided or block-sparse masks, and hand-designed combinations of the three
+\citep{child2019sparse,beltagy2020longformer,zaheer2020bigbird}. These methods
+are cheap and predictable, but the pattern is fixed before the model sees any
+data, so a dependency the designer did not anticipate simply cannot be
+expressed. The other family \emph{approximates} the softmax kernel, replacing
+the exact attention matrix with a low-rank or feature-map surrogate
+\citep{wang2020linformer,katharopoulos2020linear,choromanski2021performer}.
+These methods keep a formally global receptive field, but the approximation
+error is not under the practitioner's control and it interacts badly with the
+sharply peaked attention distributions that emerge late in training.
+
+We take a third position, which we think is the pragmatic one: keep attention
+\emph{exact}, and make the \emph{choice of what to attend to} learned. Each
+query is allocated a fixed bandwidth --- a corridor --- of $k$ key positions.
+A lightweight scorer, operating on block summaries rather than on individual
+positions, decides which blocks the corridor passes through. Because the
+bandwidth is a hyperparameter rather than an emergent property, the cost of the
+layer is known before training starts, and because the routing is learned, the
+pattern can differ per head, per layer, and per input.
+
+Three design commitments follow from this position, and they are what
+distinguishes Corridor Attention from the closest prior work.
+
+\paragraph{Bandwidth is declared, not discovered.} The practitioner sets $k$.
+The model may not exceed it, and the training objective contains no term that
+trades accuracy against cost --- there is nothing to trade, because the cost is
+fixed. This makes capacity planning a matter of arithmetic rather than of
+empirical scaling curves.
+
+\paragraph{Routing is scored on blocks, decided per query.} Scoring every
+candidate key position would reintroduce the quadratic term we are trying to
+remove. Corridor Attention scores $\lceil n / b \rceil$ block summaries
+instead, at a cost of $\Theta(n^2 / b^2)$ for the scorer, which for the block
+sizes we use is a small fraction of the total. The selection itself is
+per-query, so two queries in the same block may route differently.
+
+\paragraph{The local window is not negotiable.} Ablating the dense local
+window degrades perplexity far more than ablating any equivalent amount of
+routed bandwidth. We therefore treat the window as part of the architecture
+rather than as one option among several, and we spend the learned bandwidth
+only on what the window cannot reach.
+
+Our contributions are as follows. (i) We formalise bounded-bandwidth routed
+attention and give a block-scored, per-query instantiation of it that trains
+end to end without an auxiliary load-balancing loss. (ii) We give a cost model
+for the layer and validate it against measured wall-clock time, showing that
+the predicted and observed crossover points against dense attention agree
+closely. (iii) We evaluate on long-context language modelling and on synthetic
+retrieval probes, and we report the ablations that identify which of the three
+components each benefit comes from.
+

@@ -1,0 +1,48 @@
+% Corridor Attention --- a complete draft. Hard-wrapped at 80 columns.
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{amsthm}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\usepackage{hyperref}
+
+\title{Corridor Attention: Bounded-Bandwidth Routing for Long-Context
+Sequence Models}
+\author{A.~Fixture \and B.~Fixture}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Transformer language models spend a quadratic share of their compute on
+attention, which puts a hard practical ceiling on the context lengths that are
+affordable to train. We introduce \emph{Corridor Attention}, a routing scheme
+that gives every query token a fixed bandwidth of $k$ key positions drawn from
+a learned, block-level corridor rather than from the full prefix. Corridor
+Attention keeps a dense local window for short-range syntax, adds a small set
+of globally visible summary tokens for discourse-level dependencies, and routes
+the remaining bandwidth through a differentiable block scorer that is trained
+jointly with the rest of the network. The result is an attention layer whose
+cost is linear in sequence length with a constant that the practitioner sets
+directly. We describe the method, characterise its cost, and evaluate it on
+long-context language modelling and on retrieval-style probes.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/background}
+\input{sections/related}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/discussion}
+\input{sections/conclusion}
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

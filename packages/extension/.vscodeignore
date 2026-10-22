@@ -1,0 +1,40 @@
+# P1 / D9. Deny-by-default: exclude everything, then re-admit exactly what the
+# installed extension needs. The alternative — listing what to exclude — is how
+# `.vscode-test/` (a ~280 MB VS Code download) ends up inside a `.vsix`, and
+# nothing warns you.
+#
+# `scripts/check-vsix-contents.mjs` asserts the resulting file list, so this
+# file being read the way it is meant to be is checked rather than assumed.
+**
+
+# The bundle esbuild produces, plus the real files it ships beside it: the
+# venue templates and the Writing Skills are materialized to disk by the
+# scaffolder and the skill loader, so they cannot be inlined (ADR 0010, 0028).
+!dist/extension.cjs
+!dist/webview.js
+!dist/webview.css
+!dist/venues/**
+!dist/skills/**
+
+# PDFium's WASM (V3, ADR 0080 section 9). A copied asset, like the two above:
+# the extension reads it back at runtime through context.extensionUri, so it
+# has to be a real file in the package. About 2 MiB deflated.
+!dist/pdfium.wasm
+
+# Source maps are excluded deliberately: they roughly double the package and an
+# installed extension has no use for them.
+
+# The brand marks the manifest names, and the listing artwork.
+!media/**
+
+# The manifest and its two localization bundles.
+!package.json
+!package.nls.json
+!package.nls.zh-cn.json
+
+# The listing page, the changelog tab, the licence the manifest points at, and
+# the third-party attributions — all four travel with the distribution.
+!README.md
+!CHANGELOG.md
+!LICENSE.txt
+!THIRD-PARTY-NOTICES.md

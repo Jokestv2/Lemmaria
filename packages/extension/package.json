@@ -1,0 +1,544 @@
+{
+  "name": "lemmaria",
+  "displayName": "Lemmaria",
+  "description": "AI writing agent for academics — agentic editing, reviewing and citation checking for LaTeX and Markdown papers",
+  "version": "0.3.0",
+  "publisher": "lemmaria",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "icon": "media/lemmaria/icon.png",
+  "galleryBanner": {
+    "color": "#1B1525",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.106.0"
+  },
+  "categories": ["AI", "Chat", "Education", "Machine Learning"],
+  "keywords": [
+    "latex",
+    "markdown",
+    "academic writing",
+    "paper review",
+    "citations"
+  ],
+  "main": "./dist/extension.cjs",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "lemmaria.comingSoon",
+        "title": "%cmd.comingSoon%"
+      },
+      {
+        "command": "lemmaria.moreActions",
+        "title": "%cmd.moreActions%"
+      },
+      {
+        "command": "lemmaria.revealGlossaryTerm",
+        "title": "%cmd.revealGlossaryTerm%"
+      },
+      { "command": "lemmaria.polish", "title": "%cmd.polish%" },
+      {
+        "command": "lemmaria.shrinkToTarget",
+        "title": "%cmd.shrinkToTarget%"
+      },
+      {
+        "command": "lemmaria.expand",
+        "title": "%cmd.expand%"
+      },
+      {
+        "command": "lemmaria.proofread",
+        "title": "%cmd.proofread%"
+      },
+      {
+        "command": "lemmaria.translate",
+        "title": "%cmd.translate%"
+      },
+      {
+        "command": "lemmaria.setApiKey",
+        "title": "%cmd.setApiKey%"
+      },
+      {
+        "command": "lemmaria.acceptProposal",
+        "title": "%cmd.acceptProposal%",
+        "icon": "$(check)"
+      },
+      {
+        "command": "lemmaria.rejectProposal",
+        "title": "%cmd.rejectProposal%",
+        "icon": "$(close)"
+      },
+      {
+        "command": "lemmaria.retryProposal",
+        "title": "%cmd.retryProposal%",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "lemmaria.rollbackEdit",
+        "title": "%cmd.rollbackEdit%",
+        "icon": "$(discard)"
+      },
+      {
+        "command": "lemmaria.rollbackVerifiedEdit",
+        "title": "%cmd.rollbackVerifiedEdit%",
+        "icon": "$(discard)"
+      },
+      {
+        "command": "lemmaria.verifyNow",
+        "title": "%cmd.verifyNow%"
+      },
+      {
+        "command": "lemmaria.checkCitations",
+        "title": "%cmd.checkCitations%"
+      },
+      {
+        "command": "lemmaria.createPaperMd",
+        "title": "%cmd.createPaperMd%"
+      },
+      {
+        "command": "lemmaria.review",
+        "title": "%cmd.review%"
+      },
+      {
+        "command": "lemmaria.selectPaperEntry",
+        "title": "%cmd.selectPaperEntry%"
+      },
+      {
+        "command": "lemmaria.revealAnnotation",
+        "title": "%cmd.revealAnnotation%"
+      },
+      {
+        "command": "lemmaria.adoptSuggestion",
+        "title": "%cmd.adoptSuggestion%",
+        "icon": "$(replace)"
+      },
+      {
+        "command": "lemmaria.showCost",
+        "title": "%cmd.showCost%"
+      },
+      {
+        "command": "lemmaria.newFromVenue",
+        "title": "%cmd.newFromVenue%"
+      },
+      {
+        "command": "lemmaria.revealFinding",
+        "title": "%cmd.revealFinding%"
+      },
+      {
+        "command": "lemmaria.fixFinding",
+        "title": "%cmd.fixFinding%"
+      },
+      {
+        "command": "lemmaria.fixAllFindings",
+        "title": "%cmd.fixAllFindings%"
+      },
+      {
+        "command": "lemmaria.ignoreFinding",
+        "title": "%cmd.ignoreFinding%"
+      },
+      {
+        "command": "lemmaria.newSession",
+        "title": "%cmd.newSession%"
+      },
+      {
+        "command": "lemmaria.resumeSession",
+        "title": "%cmd.resumeSession%"
+      },
+      {
+        "command": "lemmaria.refreshSessions",
+        "title": "%cmd.refreshSessions%",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "lemmaria.compactSession",
+        "title": "%cmd.compactSession%"
+      },
+      {
+        "command": "lemmaria.restoreSessionCheckpoint",
+        "title": "%cmd.restoreSessionCheckpoint%"
+      },
+      {
+        "command": "lemmaria.useSkill",
+        "title": "%cmd.useSkill%"
+      },
+      {
+        "command": "lemmaria.skills.open",
+        "title": "%cmd.openSkill%",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "lemmaria.skills.toggle",
+        "title": "%cmd.toggleSkill%",
+        "icon": "$(circle-slash)"
+      },
+      {
+        "command": "lemmaria.grantFolder",
+        "title": "%cmd.grantFolder%"
+      },
+      {
+        "command": "lemmaria.revokeGrantedFolder",
+        "title": "%cmd.revokeGrantedFolder%"
+      },
+      {
+        "command": "lemmaria.setSemanticScholarKey",
+        "title": "%cmd.setSemanticScholarKey%"
+      },
+      {
+        "command": "lemmaria.openAssistant",
+        "title": "%cmd.openAssistant%",
+        "icon": {
+          "light": "media/lemmaria/lemmaria-light.svg",
+          "dark": "media/lemmaria/lemmaria-dark.svg"
+        }
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "lemmaria",
+          "title": "Lemmaria",
+          "icon": "media/lemmaria/activity-bar.svg"
+        }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "lemmariaAssistantContainer",
+          "title": "Lemmaria",
+          "icon": "media/lemmaria/activity-bar.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "lemmariaPanel",
+          "title": "%container.glossary%",
+          "icon": "media/lemmaria/activity-bar.svg"
+        }
+      ]
+    },
+    "views": {
+      "lemmariaPanel": [
+        {
+          "id": "lemmariaGlossary",
+          "name": "%view.glossary%"
+        }
+      ],
+      "lemmariaAssistantContainer": [
+        {
+          "id": "lemmariaAssistant",
+          "name": "%view.assistant%",
+          "type": "webview"
+        }
+      ],
+      "lemmaria": [
+        {
+          "id": "lemmariaSessions",
+          "name": "%view.sessions%",
+          "icon": "$(history)"
+        },
+        {
+          "id": "lemmariaVerifiedEdits",
+          "name": "%view.edits%",
+          "icon": "$(edit)"
+        },
+        {
+          "id": "lemmariaSkills",
+          "name": "%view.skills%",
+          "icon": "$(book)"
+        },
+        {
+          "id": "lemmariaCost",
+          "name": "%view.cost%",
+          "icon": "$(graph)",
+          "when": "config.lemmaria.cost.display != statusbar"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "lemmariaVerifiedEdits",
+        "contents": "%welcome.verifiedEdits%"
+      },
+      {
+        "view": "lemmariaGlossary",
+        "contents": "%welcome.glossary%"
+      },
+      {
+        "view": "lemmariaSessions",
+        "contents": "%welcome.sessions%"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "lemmaria.refreshSessions",
+          "when": "view == lemmariaSessions",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "lemmaria.polish",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md",
+          "group": "lemmaria@2"
+        },
+        {
+          "command": "lemmaria.shrinkToTarget",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md",
+          "group": "lemmaria@3"
+        },
+        {
+          "command": "lemmaria.expand",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md",
+          "group": "lemmaria@4"
+        },
+        {
+          "command": "lemmaria.proofread",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md",
+          "group": "lemmaria@1"
+        },
+        {
+          "command": "lemmaria.translate",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md",
+          "group": "lemmaria@5"
+        },
+        {
+          "command": "lemmaria.checkCitations",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md",
+          "group": "lemmaria@6"
+        },
+        {
+          "command": "lemmaria.review",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md",
+          "group": "lemmaria@7"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "lemmaria.acceptProposal",
+          "when": "resourceScheme == lemmaria-proposal",
+          "group": "navigation@1"
+        },
+        {
+          "command": "lemmaria.rejectProposal",
+          "when": "resourceScheme == lemmaria-proposal",
+          "group": "navigation@2"
+        },
+        {
+          "command": "lemmaria.retryProposal",
+          "when": "resourceScheme == lemmaria-proposal",
+          "group": "navigation@3"
+        },
+        {
+          "command": "lemmaria.openAssistant",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        { "command": "lemmaria.comingSoon", "when": "false" },
+        { "command": "lemmaria.moreActions", "when": "false" },
+        { "command": "lemmaria.revealGlossaryTerm", "when": "false" },
+        {
+          "command": "lemmaria.acceptProposal",
+          "when": "lemmaria.hasPendingProposal"
+        },
+        {
+          "command": "lemmaria.rejectProposal",
+          "when": "lemmaria.hasPendingProposal"
+        },
+        {
+          "command": "lemmaria.retryProposal",
+          "when": "lemmaria.hasPendingProposal"
+        },
+        {
+          "command": "lemmaria.rollbackEdit",
+          "when": "lemmaria.canRollback"
+        },
+        {
+          "command": "lemmaria.verifyNow",
+          "when": "editorLangId == latex || resourceExtname == .tex"
+        },
+        {
+          "command": "lemmaria.checkCitations",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md"
+        },
+        {
+          "command": "lemmaria.review",
+          "when": "editorLangId == latex || resourceExtname == .tex || editorLangId == markdown || resourceExtname == .md"
+        },
+        {
+          "command": "lemmaria.revealAnnotation",
+          "when": "false"
+        },
+        {
+          "command": "lemmaria.adoptSuggestion",
+          "when": "false"
+        },
+        {
+          "command": "lemmaria.rollbackVerifiedEdit",
+          "when": "false"
+        },
+        {
+          "command": "lemmaria.revealFinding",
+          "when": "false"
+        },
+        {
+          "command": "lemmaria.fixFinding",
+          "when": "false"
+        },
+        {
+          "command": "lemmaria.fixAllFindings",
+          "when": "false"
+        },
+        {
+          "command": "lemmaria.ignoreFinding",
+          "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "lemmaria.rollbackVerifiedEdit",
+          "when": "view == lemmariaVerifiedEdits && viewItem == rollbackable",
+          "group": "inline"
+        },
+        {
+          "command": "lemmaria.skills.open",
+          "when": "view == lemmariaSkills && viewItem =~ /^lemmariaSkill/",
+          "group": "inline@1"
+        },
+        {
+          "command": "lemmaria.skills.toggle",
+          "when": "view == lemmariaSkills && (viewItem == lemmariaSkill || viewItem == lemmariaSkillDisabled)",
+          "group": "inline@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Lemmaria",
+      "properties": {
+        "lemmaria.paperEntry": {
+          "type": "string",
+          "default": "",
+          "description": "%config.paperEntry%"
+        },
+        "lemmaria.paperPdf": {
+          "type": "string",
+          "default": "",
+          "description": "%config.paperPdf%"
+        },
+        "lemmaria.model.protocol": {
+          "type": "string",
+          "enum": ["anthropic", "openai-compatible"],
+          "default": "anthropic",
+          "description": "%config.model.protocol%"
+        },
+        "lemmaria.model.model": {
+          "type": "string",
+          "default": "",
+          "description": "%config.model.model%"
+        },
+        "lemmaria.model.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "%config.model.endpoint%"
+        },
+        "lemmaria.budget.maxTokens": {
+          "type": "number",
+          "default": 16000,
+          "minimum": 1,
+          "description": "%config.budget.maxTokens%"
+        },
+        "lemmaria.budget.maxToolCalls": {
+          "type": "number",
+          "default": 24,
+          "minimum": 1,
+          "description": "%config.budget.maxToolCalls%"
+        },
+        "lemmaria.budget.maxTurns": {
+          "type": "number",
+          "default": 12,
+          "minimum": 1,
+          "description": "%config.budget.maxTurns%"
+        },
+        "lemmaria.literature.contactEmail": {
+          "type": "string",
+          "default": "",
+          "description": "%config.literature.contactEmail%"
+        },
+        "lemmaria.script.interpreters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["python", "python3", "Rscript"],
+          "description": "%config.script.interpreters%"
+        },
+        "lemmaria.budget.maxIterations": {
+          "type": "number",
+          "default": 8,
+          "minimum": 1,
+          "description": "%config.budget.maxIterations%"
+        },
+        "lemmaria.budget.maxRetrieval": {
+          "type": "number",
+          "default": 10,
+          "minimum": 0,
+          "description": "%config.budget.maxRetrieval%"
+        },
+        "lemmaria.budget.maxFanOut": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 8,
+          "description": "%config.budget.maxFanOut%"
+        },
+        "lemmaria.verify.engine": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "latexmk",
+            "tectonic",
+            "xelatex",
+            "lualatex",
+            "pdflatex"
+          ],
+          "default": "auto",
+          "description": "%config.verify.engine%"
+        },
+        "lemmaria.cost.display": {
+          "type": "string",
+          "enum": ["statusbar", "panel", "both"],
+          "default": "both",
+          "description": "%config.cost.display%"
+        },
+        "lemmaria.venues.cacheDir": {
+          "type": "string",
+          "default": "",
+          "description": "%config.venues.cacheDir%"
+        },
+        "lemmaria.language": {
+          "type": "string",
+          "enum": ["auto", "en", "zh"],
+          "default": "auto",
+          "description": "%config.language.description%"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.webview.json && tsc --noEmit -p tsconfig.webview-test.json && node esbuild.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.webview.json && tsc --noEmit -p tsconfig.webview-test.json",
+    "compile-tests": "tsc -p tsconfig.test.json",
+    "test:ext": "pnpm run build && pnpm run compile-tests && vscode-test",
+    "package": "pnpm run build && node ../../scripts/generate-third-party-notices.mjs && vsce package --no-dependencies --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@lemmaria/adapters": "workspace:*",
+    "@lemmaria/harness": "workspace:*",
+    "@types/mocha": "^10.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.23.0"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "@lemmaria/harness",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./builtin-actions": {
+      "types": "./dist/actions/builtin.d.ts",
+      "default": "./dist/actions/builtin.js"
+    },
+    "./bundled-venues": {
+      "types": "./dist/venue/bundled.d.ts",
+      "default": "./dist/venue/bundled.js"
+    },
+    "./bundled-skills": {
+      "types": "./dist/skills/bundled.d.ts",
+      "default": "./dist/skills/bundled.js"
+    },
+    "./session-edits": {
+      "types": "./dist/session/edits.d.ts",
+      "default": "./dist/session/edits.js"
+    },
+    "./session-tool-summary": {
+      "types": "./dist/session/tool-summary.d.ts",
+      "default": "./dist/session/tool-summary.js"
+    },
+    "./path-order": {
+      "types": "./dist/engine/path-order.d.ts",
+      "default": "./dist/engine/path-order.js"
+    },
+    "./model-floor": {
+      "types": "./dist/model/floor.d.ts",
+      "default": "./dist/model/floor.js"
+    },
+    "./actions/*": "./actions/*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "ajv": "^8",
+    "openai": "^6.45.0",
+    "yaml": "^2"
+  }
+}

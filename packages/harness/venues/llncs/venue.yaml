@@ -1,0 +1,18 @@
+id: llncs
+name: { en: "Springer LNCS", zh: "Springer LNCS 会议" }
+documentclass: { class: llncs, options: [] }
+engine: pdflatex
+bibstyle: splncs04
+page_limit: { value: 15, unit: pages, note: "typical LNCS limit; check your CFP" }
+anonymity: none
+field_map:
+  title: "\\title{...}"
+  authors: "\\author + \\institute"
+  abstract: "abstract environment"
+starter_files: [main.tex, references.bib]
+fetch_files:
+  - { url: "https://mirrors.ctan.org/macros/latex/contrib/llncs/llncs.cls", dest: llncs.cls }
+  - { url: "https://mirrors.ctan.org/macros/latex/contrib/llncs/splncs04.bst", dest: splncs04.bst }
+license: "Springer proprietary (class not redistributed here)"
+redistribute: false
+source_url: https://www.springer.com/gp/computer-science/lncs/conference-proceedings-guidelines

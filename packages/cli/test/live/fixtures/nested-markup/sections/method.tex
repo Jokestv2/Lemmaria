@@ -1,0 +1,12 @@
+\section{Method}
+Every experiment in this paper turns on one \textbf{\emph{measurement decision}}:
+whether a retrieved passage counts as supporting a claim when it entails only
+part of it. We resolve this by annotation rather than by heuristic.
+
+Two costs follow from that choice, and we report both:
+\begin{itemize}
+\item \textbf{the cost in final test accuracy}, which we measure by ablating the
+partial-entailment rule and re-running the whole pipeline;
+\item \textbf{the annotation time per document}, which we measure directly from
+the annotation tool's logs.
+\end{itemize}

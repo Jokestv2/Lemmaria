@@ -1,0 +1,45 @@
+node_modules/
+.pnpm-store/
+dist/
+out/
+.vscode-test/
+*.vsix
+*.tsbuildinfo
+.claude/*.local.md
+.claude/settings.local.json
+.codex/
+.env
+temp/
+
+# Third-party checkouts kept for reference — never committed
+codex/
+pi/
+nature-skills/
+
+# LaTeX build artifacts (fixtures compiled locally)
+packages/*/test/fixtures/**/*.aux
+packages/*/test/fixtures/**/*.fdb_latexmk
+packages/*/test/fixtures/**/*.fls
+packages/*/test/fixtures/**/*.log
+packages/*/test/fixtures/**/*.pdf
+# ...except the PDFs a test reads: they are inputs, not build output. Each is
+# named, so a stray build artifact stays ignored.
+!packages/adapters/test/fixtures/simple-en/main.pdf
+!packages/adapters/test/fixtures/scaled-figure/figure.pdf
+!packages/adapters/test/fixtures/scaled-figure/main.pdf
+!packages/adapters/test/fixtures/visual-defects/main.pdf
+!packages/adapters/test/fixtures/acmart-review/main.pdf
+!packages/extension/test/fixtures/review-pdf/main.pdf
+packages/*/test/fixtures/**/*.synctex.gz
+
+# Local run state
+.rider/
+
+# Local evaluation logs
+.r5-runs/
+
+# Local assistant output
+Claude outputs/
+
+# esbuild metafile — input to scripts/generate-third-party-notices.mjs, not a build output
+packages/extension/.esbuild-meta.json

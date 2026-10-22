@@ -1,0 +1,44 @@
+[
+  {
+    "section": "引言",
+    "spans": [
+      {
+        "file": "main.tex",
+        "startOffset": 64,
+        "endOffset": 76,
+        "kind": "markup",
+        "token": "⟦P0⟧",
+        "raw": "\\section{引言}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 76,
+        "endOffset": 93,
+        "kind": "ref",
+        "token": "⟦P1⟧",
+        "raw": "\\label{sec:intro}"
+      }
+    ]
+  },
+  {
+    "section": "方法",
+    "spans": [
+      {
+        "file": "main.tex",
+        "startOffset": 128,
+        "endOffset": 140,
+        "kind": "markup",
+        "token": "⟦P0⟧",
+        "raw": "\\section{方法}"
+      },
+      {
+        "file": "main.tex",
+        "startOffset": 144,
+        "endOffset": 154,
+        "kind": "math",
+        "token": "⟦P1⟧",
+        "raw": "$y = f(x)$"
+      }
+    ]
+  }
+]
